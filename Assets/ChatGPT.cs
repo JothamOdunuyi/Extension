@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Text.RegularExpressions;
 using TMPro;
 using UnityEditor.VersionControl;
 using UnityEngine;
@@ -45,6 +46,27 @@ public class ChatGPT : MonoBehaviour
 
     public CoffeeMaker coffePot = new CoffeeMaker("Are you ready to play?", "text-davinci-003", .5f, 200);
 
+    public static string ExtractClassName(string codeString)
+    {
+        // Define a regular expression pattern to match the class declaration
+        string pattern = @"class\s+(\w+)\s+:\s+MonoBehaviour";
+
+        // Create a regular expression object with the pattern
+        Regex regex = new Regex(pattern);
+
+        // Use the regular expression to match the class declaration in the code string
+        Match match = regex.Match(codeString);
+
+        // If the regular expression matched the class declaration, return the class name
+        if (match.Success)
+        {
+            return match.Groups[1].Value;
+        }
+        else
+        {
+            return null; // or throw an exception, depending on how you want to handle errors
+        }
+    }
 
 
     private void Start()
@@ -57,7 +79,7 @@ public class ChatGPT : MonoBehaviour
         StartCoroutine(MakeRequest());
     }
 
-    IEnumerator MakeRequest()
+    public IEnumerator MakeRequest()
     {
         string inputText = Input.text;
 
@@ -77,6 +99,7 @@ public class ChatGPT : MonoBehaviour
         request.SetRequestHeader("Content-Type", "application/json");
         request.SetRequestHeader("Authorization", "Bearer " + apiKey);
 
+        
         // Send the request
         yield return request.SendWebRequest();
 
@@ -89,7 +112,10 @@ public class ChatGPT : MonoBehaviour
         {
             // Deserialize the JSON response
             var response = JsonUtility.FromJson<Response>(request.downloadHandler.text);
-            Debug.Log(response.choices[0].text.TrimStart().TrimEnd());
+            string textReponse = response.choices[0].text.TrimStart().TrimEnd();
+            string className = ExtractClassName(textReponse);
+            Debug.Log(textReponse);
+            Debug.Log("CLASS NAME " + className);
 
             //textmesh.text = response.choices[0].text.TrimStart().TrimEnd().ToString();
             print("response.choices[0].text.TrimStart().TrimEnd().ToString()");
