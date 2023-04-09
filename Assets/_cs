@@ -1,0 +1,4 @@
+
+if (Input.GetKeyDown(KeyCode.W)) {
+    transform.Translate(Vector3.forward * Time.deltaTime);
+}
