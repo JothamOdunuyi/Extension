@@ -11,8 +11,8 @@ public class CustomEditorScript : Editor
     {
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        GUILayout.Space(50f);
-        if (GUILayout.Button("Generate Component", GUILayout.Width(240)))
+        GUILayout.Space(80f);
+        if (GUILayout.Button("Generate Script", GUILayout.Width(240), GUILayout.Height(25)))
         {
             EditorWindow.GetWindow(typeof(AddScriptEditorWindow));
         }

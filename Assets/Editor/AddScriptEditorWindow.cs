@@ -9,7 +9,8 @@ using static APIRequest;
 using System.Reflection;
 using UnityEditor.PackageManager.Requests;
 using System.Text.RegularExpressions;
-
+using System.Net;
+using Unity.Profiling.LowLevel;
 
 public class AddScriptEditorWindow : EditorWindow
 {
@@ -29,11 +30,14 @@ public class AddScriptEditorWindow : EditorWindow
     // API Model and settings
     private string model = "text-davinci-003";
     public float temperature = 0.5f;
-    public int maxTokens = 200;
+    public int maxTokens = 4000;
+
+    private int maxCharacters = 200;
 
     // Globals
     private UnityWebRequest thisReq;
     private MonoScript scriptGenerated;
+    string textInput;
 
     [MenuItem("Open AI/Add Script")]
     static void Init()
@@ -43,18 +47,44 @@ public class AddScriptEditorWindow : EditorWindow
     }
 
     void OnGUI()
-    {
+    {/*
         // Only for Testing purposes
-        /* GUILayout.Label("Instruction");
+        *//* GUILayout.Label("Instruction");
         strin = EditorGUILayout.TextField(strin);*/
 
-        GUILayout.Label("Promt");
+        Rect windowRect = new Rect(0, 0, position.width, position.height);
+
+        // Set the text field size to match the window size
+        Rect textFieldRect = new Rect(10, 10, windowRect.width - 20, windowRect.height - 60);
+
+        EditorGUI.BeginChangeCheck();
+        // Draw the text field
+        prompt = EditorGUI.TextField(textFieldRect, prompt.Substring(0,Mathf.Clamp(prompt.Length, 0, maxCharacters)));
+        if (EditorGUI.EndChangeCheck())
+        {
+           if(prompt.Length > maxCharacters)
+            {
+                Debug.Log("max length reached");
+            }
+
+        }
+        //prompt = prompt.Substring(Mathf.Clamp(prompt.Length, 0, 200));
+        //char[] f = prompt.ToCharArray();
+
+        // Draw a button below the text field
+        Rect buttonRect = new Rect(textFieldRect.x, textFieldRect.yMax + 10, textFieldRect.width, 30);
+        if (GUI.Button(buttonRect, "Submit"))
+        {
+            Request();
+        }
+
+       /* GUILayout.Label("Promt");
         prompt = EditorGUILayout.TextField(prompt);
       
         if (GUILayout.Button("Compile"))
         {
             Request();
-        }
+        }*/
     }
 
 
@@ -64,6 +94,8 @@ public class AddScriptEditorWindow : EditorWindow
         var request = thisReq;
         if (!thisReq.isDone)
         {
+          /*  float progress = Mathf.Clamp01(request.downloadProgress + request.uploadProgress);
+            Debug.Log(progress * 100 + "%");*/
             return;
         }
 
@@ -77,16 +109,15 @@ public class AddScriptEditorWindow : EditorWindow
             var response = JsonUtility.FromJson<Response>(request.downloadHandler.text);
             string textReponse = response.choices[0].text.Trim();
          
-            // AI often returns example of code, which we do not want
+            // AI often returns example of code in first line, which we do not want
             int firstNewlineIndex = textReponse.IndexOf('\n');
-            string outputString = textReponse.Substring(firstNewlineIndex + 1);
+            string outputString = !textReponse.Substring(firstNewlineIndex, firstNewlineIndex).Contains("using") ? textReponse : textReponse.Substring(firstNewlineIndex + 1);
 
             /*//if you wish to see the code in console
             Debug.Log(outputString);*/
 
             // Deal with actually implementing the Script
             AddNewScript(ExtractClassName(textReponse), outputString);
-
 
         }
 
