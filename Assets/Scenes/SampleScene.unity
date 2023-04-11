@@ -132,9 +132,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 334090874}
-  - component: {fileID: 334090873}
   - component: {fileID: 334090876}
   - component: {fileID: 334090875}
+  - component: {fileID: 334090873}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -149,20 +149,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 334090872}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2fb5ca0338f60634b8c8fc2d7387bc26, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  temperature: 0.5
-  maxTokens: 200
-  textmesh: {fileID: 0}
-  Input: {fileID: 0}
-  coffePot:
-    prompt: Write the c# Unity template script
-    model: text-davinci-003
-    temperature: 0.5
-    max_tokens: 200
+  NPC: {fileID: 11400000, guid: 0bdeeeac2a4fa5b4f97e0e90cdd7d61f, type: 2}
 --- !u!4 &334090874
 Transform:
   m_ObjectHideFlags: 0
@@ -184,7 +176,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 334090872}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1a37da2d2ef437c4eac0fae3de945cb1, type: 3}
   m_Name: 
@@ -202,7 +194,7 @@ Rigidbody:
   m_Mass: 1
   m_Drag: 0
   m_AngularDrag: 0.05
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0

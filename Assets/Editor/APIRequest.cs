@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
+using POGU;
 
 public class APIRequest : EditorWindow
 {
-
+   
     public static string prompt = "How are you bro";
     public static string apiKey = "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";
 

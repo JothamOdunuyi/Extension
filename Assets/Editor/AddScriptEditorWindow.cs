@@ -87,10 +87,10 @@ public class AddScriptEditorWindow : EditorWindow
         }*/
     }
 
-
+    #region Request Handlers
+    // Wait for compilation to finish
     private void WaitForRequest()
     {
-        // Wait for compilation to finish
         var request = thisReq;
         if (!thisReq.isDone)
         {
@@ -99,7 +99,7 @@ public class AddScriptEditorWindow : EditorWindow
             return;
         }
 
-        if (request.isNetworkError || request.isHttpError)
+        if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
         {
             Debug.Log(request.error);
         }
@@ -151,6 +151,9 @@ public class AddScriptEditorWindow : EditorWindow
         EditorApplication.update += WaitForRequest;
     }
 
+    #endregion
+
+    #region Script Generation
     // Third-Party method (CHATGPT3)
     public static string ExtractClassName(string codeString)
     {
@@ -223,7 +226,9 @@ public class AddScriptEditorWindow : EditorWindow
             Debug.LogError("No game object selected.");
         }
     }
+    #endregion
 
+    #region Reponse Classes
     // Classes used increase readbility and to better read reposne data
     [System.Serializable]
     private class Response
@@ -237,4 +242,5 @@ public class AddScriptEditorWindow : EditorWindow
         public string text;
     }
 
+    #endregion
 }

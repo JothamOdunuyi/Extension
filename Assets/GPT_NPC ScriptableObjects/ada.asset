@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b803f16ea2cf6a94495ae4d4bdd47e67, type: 3}
+  m_Name: ada
+  m_EditorClassIdentifier: 
+  name: ada
+  personality: da
+  job: d
+  location: 
+  creativity: 0.5
+  name_introduction: 0
+  language: English
+  world_name: 

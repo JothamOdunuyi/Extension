@@ -5,46 +5,52 @@ using TMPro;
 using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UIElements;
 using static ChatGPT;
 
 public class ChatGPT : MonoBehaviour
 {
-    public const string prompt = "How are you bro";
-    public const string apiKey = "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";
+    private const string apiKey = "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";
 
-    private const string strin = "Reply as if you are in a game lobby";
-
-    // The engine you want to use (keep in mind that it has to be the exact name of the engine)
-    private string model = "text-davinci-003";
-    public float temperature = 0.5f;
-    public int maxTokens = 200;
-
-    public TMP_Text textmesh;
-    public TMP_InputField Input;
-
+    [SerializeField]
+    public GPT_NPC NPC;
     
     // Declare your serializable data.
-    [System.Serializable]
-    public class CoffeeMaker
+    public class GPTMessageBody 
     {
-        public string prompt = "How are you";
+        public string prompt = "";
         public string model = "text-davinci-003";
-        public float temperature = 333f;
-        public int max_tokens = 225;
+        public float temperature = .5f;
+        public int max_tokens = 4000;
 
-        public CoffeeMaker(string prompt, string model, float temperature, int max_tokens)
+        public GPTMessageBody(string prompt, string model, float temperature, int max_tokens)
         {
             this.prompt = prompt;
             this.model = model;
             this.temperature = temperature;
             this.max_tokens = max_tokens;
         }
+
+        public GPTMessageBody(string prompt, string model, float temperature)
+        {
+            this.prompt = prompt;
+            this.model = model;
+            this.temperature = temperature;
+        }
+
+        public GPTMessageBody(string prompt, string model)
+        {
+            this.prompt = prompt;
+            this.model = model;
+        }
+
+        public GPTMessageBody(string prompt)
+        {
+            this.prompt = prompt;
+        }
     }
 
-
-
-
-    public CoffeeMaker coffePot = new CoffeeMaker("Are you ready to play?", "text-davinci-003", .5f, 200);
+    public GPTMessageBody messageBody;
 
     public static string ExtractClassName(string codeString)
     {
@@ -81,16 +87,16 @@ public class ChatGPT : MonoBehaviour
 
     public IEnumerator MakeRequest()
     {
-        string inputText = Input.text;
 
-        // Create a JSON object with the necessary parameters, Unity's JsonUtility.ToJson failed me
-        string json = "{\"prompt\":\"" + strin + "\",\"model\":\"" + model + "\",\"temperature\":" + temperature + ",\"max_tokens\":" + maxTokens + "}";
-        //newBody = new requestBody(prompt, model, temperature.ToString(), maxTokens.ToString());
-        string toJson = JsonUtility.ToJson(coffePot);
+        string promtInstructions = $"From now on act as if you are a NPC in a {NPC.world_setting} world{(!string.IsNullOrEmpty(NPC.world_name) ? $" called {NPC.world_name}" : null)}. Your name is {NPC.name}. {NPC.name} is:{(!string.IsNullOrEmpty(NPC.job) ? $" a {NPC.job}" : null)}{(!string.IsNullOrEmpty(NPC.location) ? $" currently in a {NPC.location}," : null)} {NPC.personality}.{(NPC.name_introduction ? $"{NPC.name} introduces their self with their name." : null)} {NPC.name} replies: Human like, as if a traveler greeted you, in {NPC.language} and short. {NPC.name} doesn't ever: say their personality traits, {(NPC.assume_assitance ? $"assume the traveler needs assitance and ask if they need it{(NPC.name_introduction ? "," : null)}" : null)} {(!NPC.name_introduction ? "introduce themself with their name" : null)} say \"{NPC.name}\". ";
+        messageBody = new GPTMessageBody(promtInstructions, "text-davinci-003", NPC.creativity, 3000);
+       
+        string toJson = JsonUtility.ToJson(messageBody);
         print(toJson);
 
 
         byte[] body = System.Text.Encoding.UTF8.GetBytes(toJson);
+        print(body.Length);
 
         // Create a new UnityWebRequest
         var request = new UnityWebRequest("https://api.openai.com/v1/completions", "POST");
@@ -104,7 +110,7 @@ public class ChatGPT : MonoBehaviour
         yield return request.SendWebRequest();
 
         // Check for errors
-        if (request.isNetworkError || request.isHttpError)
+        if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
         {
             Debug.Log(request.error);
         }
@@ -112,13 +118,13 @@ public class ChatGPT : MonoBehaviour
         {
             // Deserialize the JSON response
             var response = JsonUtility.FromJson<Response>(request.downloadHandler.text);
-            string textReponse = response.choices[0].text.TrimStart().TrimEnd();
-            string className = ExtractClassName(textReponse);
+            string textReponse = response.choices[0].text.Trim();
+            //string className = ExtractClassName(textReponse);
             Debug.Log(textReponse);
-            Debug.Log("CLASS NAME " + className);
+            //Debug.Log("CLASS NAME " + className);
 
             //textmesh.text = response.choices[0].text.TrimStart().TrimEnd().ToString();
-            print("response.choices[0].text.TrimStart().TrimEnd().ToString()");
+            //print("response.choices[0].text.TrimStart().TrimEnd().ToString()");
         }
     }
 
