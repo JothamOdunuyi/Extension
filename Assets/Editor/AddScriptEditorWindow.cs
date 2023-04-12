@@ -30,7 +30,7 @@ public class AddScriptEditorWindow : EditorWindow
     // API Model and settings
     private string model = "text-davinci-003";
     public float temperature = 0.5f;
-    public int maxTokens = 4000;
+    public int maxTokens = 3000;
 
     private int maxCharacters = 200;
 
@@ -173,7 +173,7 @@ public class AddScriptEditorWindow : EditorWindow
         }
         else
         {
-            Debug.Log("Getting ClassName failed!");
+            Debug.LogWarning("Getting ClassName failed!");
             return null; // or throw an exception, depending on how you want to handle errors
         }
     }
@@ -181,7 +181,7 @@ public class AddScriptEditorWindow : EditorWindow
     void AddNewScript(string localClassName, string scriptContents)
     {
         // Set className
-        className = localClassName;
+        className = localClassName == null ? "GeneratedScript" : localClassName;
 
         // Set script path
         string scriptPath = AssetDatabase.GenerateUniqueAssetPath("Assets/" + className + ".cs");

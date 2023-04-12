@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using TMPro;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -110,8 +111,17 @@ public class Editor_GPTNPC : EditorWindow
             if (gameObject)
             {
 
-                gameObject.AddComponent(Type.GetType("ChatGPT, Assembly-CSharp"));
-                gameObject.GetComponent<ChatGPT>().NPC = newNPC;
+                gameObject.AddComponent(Type.GetType("GPTNPC_Dialogue, Assembly-CSharp"));
+                
+                GPTNPC_Dialogue GPTNPC = gameObject.GetComponent<GPTNPC_Dialogue>();
+                Transform dialogueCanvas = GameObject.Find("Dialogue_Canvas").transform;
+                
+                GPTNPC.NPC = newNPC;
+                GPTNPC.textField = dialogueCanvas.Find("TMP").GetComponent<TMP_Text>();
+                GPTNPC.inputField = dialogueCanvas.Find("InputField").GetComponent<TMP_InputField>();
+                GPTNPC.sumbitButton = dialogueCanvas.Find("Button").GetComponent<UnityEngine.UI.Button>();
+                GPTNPC.slider = dialogueCanvas.Find("Slider").GetComponent<UnityEngine.UI.Slider>();
+
                 Debug.Log("Added component with ScriptableObject");
             }
             else
