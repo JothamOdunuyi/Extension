@@ -15,23 +15,23 @@ public class GPTNPC_Dialogue : MonoBehaviour
 {
     private string apiKey = "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"; // Replace with your OpenAI API key
     private string gpt3Endpoint = "https://api.openai.com/v1/chat/completions";
-    private const float typingSpeed = 0.05f;
+    private const float typingSpeed = 0.04f;
     private bool canSumbit = true;
     private UnityWebRequest www;
 
     [SerializeField]
     public GPT_NPC NPC;
 
-    [SerializeField]
+    [HideInInspector]
     public TMP_Text textField;
 
-    [SerializeField]
+    [HideInInspector]
     public TMP_InputField inputField;
 
-    [SerializeField]
+    [HideInInspector]
     public UnityEngine.UI.Button sumbitButton;
 
-    [SerializeField]
+    [HideInInspector]
     public Slider slider;
 
     #region Data Classes
@@ -77,6 +77,7 @@ public class GPTNPC_Dialogue : MonoBehaviour
         requestData.messages = new List<Messages>();
         requestData.model = "gpt-3.5-turbo"; // Set the model
         SetNPCData();
+
         // Start a coroutine to send a request to OpenAI API
         sumbitButton.onClick.AddListener(() => GetResponse());
         StartCoroutine(SendRequest());
@@ -99,23 +100,20 @@ public class GPTNPC_Dialogue : MonoBehaviour
         if (!canSumbit)
             yield break;
 
+        // Make sure User cannot spam request
         canSumbit = false;
         sumbitButton.gameObject.SetActive(false);
 
-        // Prepare request data
-        if (requestData.messages.Count == 1)
-        {
-            print("First call");
-        }
-        else
-        {
+        // After NPC greeting, start storing user input
+        if (requestData.messages.Count != 1){
             requestData.messages.Add(new Messages { role = "user", content = inputField.text });
         }
 
         // Convert request data to JSON
         string json = JsonUtility.ToJson(requestData);
 
-        print(json);
+       /* Testing purposes
+        print(json);*/
 
         // Create UnityWebRequest (Same as putting "POST" at the end
         www = new UnityWebRequest(gpt3Endpoint, UnityWebRequest.kHttpVerbPOST);
@@ -130,31 +128,32 @@ public class GPTNPC_Dialogue : MonoBehaviour
         // Set download handler to receive response
         www.downloadHandler = new DownloadHandlerBuffer();
 
-        print("SENT");
+        print("Data sent");
+
+        textField.text = "";
+        inputField.text = "";
 
         slider.gameObject.SetActive(true);
         EditorApplication.update += LoadingBar;
+
         // Send request and wait for response
         yield return www.SendWebRequest();
 
         if (www.result == UnityWebRequest.Result.Success)
         {
+            // Convert data
             ResponseData responseData = JsonUtility.FromJson<ResponseData>(www.downloadHandler.text);
+            
             Choices systemMessage = responseData.choices[0];
             string assistantReply = RemoveSpeechMarks(systemMessage.message.content);
 
-            /*print("Choices data " + responseData.choices);
-            print("Choice 0 data " + responseData.choices[0]);*/
-
+            // Add NPC reponse to list of messages
             requestData.messages.Add(new Messages { role = "system", content = assistantReply });
 
-            /* foreach (var msgContent in requestData.messages)
-             {
-                 textField.text += $"{msgContent}\n";
-             }*/
-            // Do something with the assistant's reply
+           /* Testing purposes
             Debug.Log(www.downloadHandler.text);
-            Debug.Log("Assistant: " + assistantReply);
+            Debug.Log("Assistant: " + assistantReply);*/
+
             StartCoroutine(TypeText(assistantReply));
         }
         else
@@ -169,10 +168,7 @@ public class GPTNPC_Dialogue : MonoBehaviour
      private void LoadingBar()
     {
         float progress = Mathf.Clamp01(www.downloadProgress);
-        Debug.Log(progress);
-        slider.value = (int)(progress * 100f);
-
-
+        slider.value = progress;
         if(progress > 0)
         {
             slider.gameObject.SetActive(false);

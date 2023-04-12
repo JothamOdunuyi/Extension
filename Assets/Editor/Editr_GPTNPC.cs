@@ -25,7 +25,10 @@ public class Editor_GPTNPC : EditorWindow
     private bool assume_assitance;
     private bool hasAge;
 
-    private const int maxCharacters = 100;
+    private float baseWidth = 150f;
+    private float extendedWidth = 300f;
+
+    private const int tokenWarning = 500;
 
     [MenuItem("Open AI/Create COOL GPT NPC")]
     static void Init()
@@ -37,97 +40,112 @@ public class Editor_GPTNPC : EditorWindow
     private void OnGUI()
     {
 
-        EditorGUILayout.LabelField("Name");
-        NPC_Name = EditorGUILayout.TextField(NPC_Name); //REQUIRED
+        EditorGUILayout.LabelField("Name*", EditorStyles.boldLabel);
+        NPC_Name = EditorGUILayout.TextField(NPC_Name, GUILayout.Width(baseWidth)); //REQUIRED
 
         EditorGUILayout.LabelField("Gender");
-        gender = EditorGUILayout.TextField(gender);
+        gender = EditorGUILayout.TextField(gender, GUILayout.Width(baseWidth));
 
         EditorGUILayout.LabelField("Age");
-        age = EditorGUILayout.IntField(age); 
+        age = EditorGUILayout.IntField(age, GUILayout.Width(baseWidth)); 
 
-        EditorGUILayout.LabelField("Personality Traits");
-        personality = EditorGUILayout.TextField(personality); //REQUIRED
+        EditorGUILayout.LabelField("Personality Traits*", EditorStyles.boldLabel);
+        personality = EditorGUILayout.TextField(personality, GUILayout.Width(extendedWidth)); //REQUIRED
 
         EditorGUILayout.LabelField("Backstory");
-        backstory = EditorGUILayout.TextField(backstory);
+        backstory = EditorGUILayout.TextField(backstory, GUILayout.Width(extendedWidth));
 
         EditorGUILayout.LabelField("Job / Class");
-        job = EditorGUILayout.TextField(job);
+        job = EditorGUILayout.TextField(job, GUILayout.Width(baseWidth));
+
+        EditorGUILayout.Space();
 
         EditorGUILayout.LabelField("Current Location");
-        location = EditorGUILayout.TextField(location);
+        location = EditorGUILayout.TextField(location, GUILayout.Width(extendedWidth));
 
         EditorGUILayout.LabelField("Creativity (0-1)");
-        creativity = EditorGUILayout.FloatField(creativity);
+        creativity = EditorGUILayout.FloatField(creativity, GUILayout.Width(baseWidth));
 
-        EditorGUILayout.LabelField("Language");
-        language = EditorGUILayout.TextField(language); //REQUIRED
+        EditorGUILayout.LabelField("Language*", EditorStyles.boldLabel, GUILayout.Width(baseWidth));
+        language = EditorGUILayout.TextField(language, GUILayout.Width(baseWidth)); //REQUIRED
 
         EditorGUILayout.LabelField("World Name");
-        world_name = EditorGUILayout.TextField(world_name);
+        world_name = EditorGUILayout.TextField(world_name, GUILayout.Width(baseWidth));
 
         EditorGUILayout.LabelField("World Setting");
-        world_setting = EditorGUILayout.TextField(world_setting);
+        world_setting = EditorGUILayout.TextField(world_setting, GUILayout.Width(baseWidth));
 
-        name_introduction = EditorGUILayout.Toggle("Introduce with Name", name_introduction);
+        EditorGUILayout.Space();
+
+        name_introduction = EditorGUILayout.Toggle("Introduce with Name", name_introduction, GUILayout.Width(baseWidth));
         assume_assitance = EditorGUILayout.Toggle("Assume Player wants assitance with something", assume_assitance);
         hasAge = EditorGUILayout.Toggle("NPC age is considered", hasAge);
 
+
+
         int total_characters = NPC_Name.Length + gender.Length + personality.Length + backstory.Length + job.Length + location.Length + world_name.Length + world_setting.Length + language.Length;
-        EditorGUILayout.LabelField($"Total characters {total_characters}/ {maxCharacters}");
+        EditorGUILayout.LabelField($"Estimated Tokens {(int)(total_characters / 3.5f)} / {tokenWarning}");
 
         if (GUILayout.Button("Submit"))
         {
-            GPT_NPC newNPC = ScriptableObject.CreateInstance<GPT_NPC>();
 
-            newNPC.name = NPC_Name;
-            newNPC.gender = gender;
-            newNPC.age = age;
-            newNPC.personality = personality;
-            newNPC.backstory = backstory;
-            newNPC.job = job;
-            newNPC.location = location ;
-            newNPC.creativity = Mathf.Clamp(creativity, 0 , 1);
-            newNPC.language = language;
-            newNPC.name_introduction = name_introduction;
-            newNPC.assume_assitance = assume_assitance;
-            newNPC.world_name = world_name;
-            newNPC.world_setting = world_setting;
-
-            // Set the asset path and name
-            string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath("Assets/GPT_NPC ScriptableObjects/" + NPC_Name + ".asset");
-
-            // Create the ScriptableObject asset
-            AssetDatabase.CreateAsset(newNPC, assetPathAndName);
-
-            // Save any changes to the asset database
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            GameObject gameObject = Selection.activeGameObject;
-
-
-            if (gameObject)
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(personality) || string.IsNullOrEmpty(language))
             {
-
-                gameObject.AddComponent(Type.GetType("GPTNPC_Dialogue, Assembly-CSharp"));
-                
-                GPTNPC_Dialogue GPTNPC = gameObject.GetComponent<GPTNPC_Dialogue>();
-                Transform dialogueCanvas = GameObject.Find("Dialogue_Canvas").transform;
-                
-                GPTNPC.NPC = newNPC;
-                GPTNPC.textField = dialogueCanvas.Find("TMP").GetComponent<TMP_Text>();
-                GPTNPC.inputField = dialogueCanvas.Find("InputField").GetComponent<TMP_InputField>();
-                GPTNPC.sumbitButton = dialogueCanvas.Find("Button").GetComponent<UnityEngine.UI.Button>();
-                GPTNPC.slider = dialogueCanvas.Find("Slider").GetComponent<UnityEngine.UI.Slider>();
-
-                Debug.Log("Added component with ScriptableObject");
+                EditorUtility.DisplayDialog("Error", "Name, Personality and Language are all required fields.", "OK");
             }
             else
             {
-                Debug.LogWarning("No Gameobject was selected");
+                GPT_NPC newNPC = ScriptableObject.CreateInstance<GPT_NPC>();
+
+                newNPC.name = NPC_Name;
+                newNPC.gender = gender;
+                newNPC.age = age;
+                newNPC.personality = personality;
+                newNPC.backstory = backstory;
+                newNPC.job = job;
+                newNPC.location = location;
+                newNPC.creativity = Mathf.Clamp(creativity, 0, 1);
+                newNPC.language = language;
+                newNPC.name_introduction = name_introduction;
+                newNPC.assume_assitance = assume_assitance;
+                newNPC.world_name = world_name;
+                newNPC.world_setting = world_setting;
+
+                // Set the asset path and name
+                string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath("Assets/GPT_NPC ScriptableObjects/" + NPC_Name + ".asset");
+
+                // Create the ScriptableObject asset
+                AssetDatabase.CreateAsset(newNPC, assetPathAndName);
+
+                // Save any changes to the asset database
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+
+                GameObject gameObject = Selection.activeGameObject;
+
+
+                if (gameObject)
+                {
+
+                    gameObject.AddComponent(Type.GetType("GPTNPC_Dialogue, Assembly-CSharp"));
+
+                    GPTNPC_Dialogue GPTNPC = gameObject.GetComponent<GPTNPC_Dialogue>();
+                    Transform dialogueCanvas = GameObject.Find("Dialogue_Canvas").transform;
+
+                    GPTNPC.NPC = newNPC;
+                    GPTNPC.textField = dialogueCanvas.Find("TMP").GetComponent<TMP_Text>();
+                    GPTNPC.inputField = dialogueCanvas.Find("InputField").GetComponent<TMP_InputField>();
+                    GPTNPC.sumbitButton = dialogueCanvas.Find("Button").GetComponent<UnityEngine.UI.Button>();
+                    GPTNPC.slider = dialogueCanvas.Find("Slider").GetComponent<UnityEngine.UI.Slider>();
+
+                    Debug.Log("Added component with ScriptableObject");
+                }
+                else
+                {
+                    Debug.LogWarning("No Gameobject was selected");
+                }
             }
+           
         }
     }
 }
