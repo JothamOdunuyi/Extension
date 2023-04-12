@@ -12,13 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b803f16ea2cf6a94495ae4d4bdd47e67, type: 3}
   m_Name: Bob
   m_EditorClassIdentifier: 
-  name: Zen
-  personality: brave, careful, smart
+  name: Bob
+  gender: 
+  age: 0
+  personality: friendly
+  backstory: 
   job: knight
   location: village
   creativity: 0.5
   name_introduction: 0
   assume_assitance: 0
+  hasAge: 0
   language: English
-  world_name: Lola
-  world_setting: Dark Fantasy
+  world_name: 
+  world_setting: 

@@ -16,8 +16,7 @@ MonoBehaviour:
   gender: Female
   age: 21
   personality: Loving, kind
-  backstory: A german  university student currently doing her master's, she is highly
-    in love with her boyfriend JJ
+  backstory: 
   job: Student
   location: Germany
   creativity: 0.5
