@@ -17,6 +17,8 @@ public class GPT_NPC : ScriptableObject
     public bool assume_assitance;
     public bool hasAge;
     public string language = "English";
+    public string whoIsTalking;
     public string world_name;
     public string world_setting;
+    
 }

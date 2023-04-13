@@ -16,6 +16,7 @@ namespace Player
         private float horz_movement;
         private float vert_movement;
         private float sprint_speed;
+        public float defaultSpeed;
 
         //VAR
         [Header("Player Variables")]
@@ -35,6 +36,7 @@ namespace Player
 
         void Start()
         {
+            defaultSpeed = speed;
             cam = cam_trans.localRotation;
             rb = GetComponent<Rigidbody>();
         }
@@ -46,8 +48,6 @@ namespace Player
             vert_movement = Input.GetAxisRaw("Vertical");
             dir = new Vector3(horz_movement, 0, vert_movement).normalized;
 
-            UpdateY();
-            UpdateX();
             Update_Cursor();
         }
 
@@ -99,6 +99,9 @@ namespace Player
                 //CURSOR HIDDEN
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
+
+                UpdateY();
+                UpdateX();
 
                 //PRESS ESC UNLOCK CURSOR
                 if (Input.GetKeyDown(KeyCode.Escape))

@@ -24,5 +24,6 @@ MonoBehaviour:
   assume_assitance: 1
   hasAge: 1
   language: English
+  whoIsTalking: Tom
   world_name: Eartla
   world_setting: Dark Fantasy

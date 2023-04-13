@@ -3,6 +3,55 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
+using System.Reflection;
+
+/*[InitializeOnLoad]
+public class CustomEditorScript : InspectorElement
+{
+    static CustomEditorScript()
+    {
+        EditorApplication.update += Update;
+    }
+
+    private static void Update()
+    {
+        // Get all InspectorWindows
+        var inspectorWindows = Resources.FindObjectsOfTypeAll<UnityEditor.InspectorWindow>();
+
+        foreach (var inspectorWindow in inspectorWindows)
+        {
+            // Get the VisualElement containing the "Add Component" button
+            var root = inspectorWindow.rootVisualElement;
+            var addComponentElement = root.Q<Button>("addComponentButton");
+
+            if (addComponentElement != null)
+            {
+                // Create a custom button
+                var customButton = new Button(() => { Debug.Log("Custom Button clicked"); })
+                {
+                    text = "Custom Button",
+                    name = "customButton"
+                };
+
+                // Check if the custom button is already added
+                if (root.Q<Button>("customButton") == null)
+                {
+                    // Insert the custom button underneath the "Add Component" button
+                    var parent = addComponentElement.parent;
+                    var index = parent.IndexOf(addComponentElement);
+                    parent.Insert(index + 1, customButton);
+                }
+            }
+        }
+    }
+}
+
+*/
+
+
+
+
+
 /*[CustomEditor(typeof(GameObject))]
 public class CustomEditorScript : Editor
 {

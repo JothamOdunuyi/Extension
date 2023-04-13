@@ -10,12 +10,14 @@ using System.Data;
 using System;
 using UnityEditor;
 using UnityEngine.UI;
+using static UnityEditor.Experimental.GraphView.GraphView;
+using Player;
 
 public class GPTNPC_Dialogue : MonoBehaviour
 {
     private string apiKey = "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"; // Replace with your OpenAI API key
     private string gpt3Endpoint = "https://api.openai.com/v1/chat/completions";
-    private const float typingSpeed = 0.04f;
+    private const float typingSpeed = 0.037f;
     private bool canSumbit = true;
     private UnityWebRequest www;
 
@@ -29,10 +31,15 @@ public class GPTNPC_Dialogue : MonoBehaviour
     public TMP_InputField inputField;
 
     [HideInInspector]
-    public UnityEngine.UI.Button sumbitButton;
+    public UnityEngine.UI.Button submitButton;
+
+    [HideInInspector]
+    public UnityEngine.UI.Button closeButton;
 
     [HideInInspector]
     public Slider slider;
+
+    GameObject dialogueCanvas;
 
     #region Data Classes
 
@@ -74,13 +81,14 @@ public class GPTNPC_Dialogue : MonoBehaviour
 
     void Start()
     {
+        dialogueCanvas = closeButton.transform.root.gameObject;
+        dialogueCanvas.SetActive(false);
         requestData.messages = new List<Messages>();
         requestData.model = "gpt-3.5-turbo"; // Set the model
         SetNPCData();
 
         // Start a coroutine to send a request to OpenAI API
-        sumbitButton.onClick.AddListener(() => GetResponse());
-        StartCoroutine(SendRequest());
+       
     }
 
     void GetResponse()
@@ -88,11 +96,54 @@ public class GPTNPC_Dialogue : MonoBehaviour
         StartCoroutine(SendRequest());
     }
 
+    private void OnCollisionEnter(Collision hit)
+    {
+        GameObject player = hit.gameObject;
+        if (player.tag == "Player" && canSumbit)
+        {
+            player.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
+            player.GetComponent<PlayerController>().cursor_locked = false;
+            dialogueCanvas.SetActive(true);
+
+            // Adds functions to listeners
+            submitButton.onClick.AddListener(() => GetResponse());
+            closeButton.onClick.AddListener(() => CloseButtonOnClick());
+
+            StartCoroutine(SendRequest());
+        }
+    }
+
+    public void CloseButtonOnClick()
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        dialogueCanvas.SetActive(false);
+
+        requestData.messages.Add(new Messages { role = "system", content = "Goodbye" });
+        requestData.messages.Add(new Messages { role = "user", content = $"Hello again {NPC.name}" });
+
+        // Prevents obvious errors
+        submitButton.onClick.RemoveAllListeners();
+        closeButton.onClick.RemoveAllListeners();
+
+        //StopCoroutine(SendRequest());
+
+        textField.text = "";
+        canSumbit = true;
+
+        player.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
+        player.GetComponent<PlayerController>().cursor_locked = true;
+    }
+
 
     void SetNPCData()
     {
-        string promtInstructions = $"From now on act as if you are a NPC in a {NPC.world_setting} world{(!string.IsNullOrEmpty(NPC.world_name) ? $" called {NPC.world_name}" : null)}. Your name is {NPC.name}. {NPC.name} is:{(!string.IsNullOrEmpty(NPC.job) ? $" a {NPC.job}" : null)}{(!string.IsNullOrEmpty(NPC.location) ? $" currently in a {NPC.location}," : null)} {NPC.personality}.{(NPC.name_introduction ? $"{NPC.name} introduces their self with their name." : null)} {NPC.name} replies: Human like, as if a traveler greeted you, in {NPC.language} and short. {NPC.name} doesn't ever: say their personality traits, {(NPC.assume_assitance ? $"assume the traveler needs assitance and ask if they need it{(NPC.name_introduction ? "," : null)}" : null)} {(!NPC.name_introduction ? "introduce themself with their name" : null)} say \"{NPC.name}\". ";
+        string promtInstructions = $"From now on act as if you are a NPC  in a {NPC.world_setting} world{(!string.IsNullOrEmpty(NPC.world_name) ? $" called {NPC.world_name}" : null)}. Your name is {NPC.name} {(NPC.hasAge ? $"Age {NPC.age}, " : null)}{(!string.IsNullOrEmpty(NPC.gender) ? $"Gender {NPC.gender}" : null)}. {NPC.name} is:{(!string.IsNullOrEmpty(NPC.job) ? $" a {NPC.job}" : null)}{(!string.IsNullOrEmpty(NPC.location) ? $" currently in a {NPC.location}," : null)} {NPC.personality}.{(NPC.name_introduction ? $" {NPC.name} introduces their self with their name." : null)} {(!string.IsNullOrEmpty(NPC.backstory) ? $"Your backstory is: {NPC.name}: {NPC.backstory}." : null)} {NPC.name} replies: Human-like, as if {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "a stranger" )} greeted you, in {NPC.language} and short. {NPC.name} doesn't ever: say their personality traits, {(NPC.assume_assitance ? $"assume {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "the stranger")} needs assitance and ask if they need it{(NPC.name_introduction ? "," : null)}" : null)} {(!NPC.name_introduction ? "introduce themself with their name" : null)} say \"{NPC.name}\", no Narrative text.{(!string.IsNullOrEmpty(NPC.whoIsTalking) ? $"You are greeted by {NPC.whoIsTalking}" : null)}";
         requestData.messages.Add(new Messages { role = "assistant", content = promtInstructions });
+        
+        if (!string.IsNullOrEmpty(NPC.whoIsTalking)) {
+            requestData.messages.Add(new Messages { role = "user", content = $"I am {NPC.whoIsTalking}" });
+        }
+
     }
 
     IEnumerator SendRequest()
@@ -102,18 +153,21 @@ public class GPTNPC_Dialogue : MonoBehaviour
 
         // Make sure User cannot spam request
         canSumbit = false;
-        sumbitButton.gameObject.SetActive(false);
+
+        closeButton.gameObject.SetActive(false);
+        submitButton.gameObject.SetActive(false);
 
         // After NPC greeting, start storing user input
-        if (requestData.messages.Count != 1){
+        if (requestData.messages.Count != 1 && !string.IsNullOrEmpty(inputField.text)){
+            //print("sent player input");
             requestData.messages.Add(new Messages { role = "user", content = inputField.text });
         }
 
         // Convert request data to JSON
         string json = JsonUtility.ToJson(requestData);
 
-       /* Testing purposes
-        print(json);*/
+        //Testing purposes
+        //print(json);
 
         // Create UnityWebRequest (Same as putting "POST" at the end
         www = new UnityWebRequest(gpt3Endpoint, UnityWebRequest.kHttpVerbPOST);
@@ -128,13 +182,13 @@ public class GPTNPC_Dialogue : MonoBehaviour
         // Set download handler to receive response
         www.downloadHandler = new DownloadHandlerBuffer();
 
-        print("Data sent");
+        //print("Data sent");
 
         textField.text = "";
         inputField.text = "";
 
         slider.gameObject.SetActive(true);
-        EditorApplication.update += LoadingBar;
+        StartCoroutine(LoadingBar());
 
         // Send request and wait for response
         yield return www.SendWebRequest();
@@ -150,9 +204,9 @@ public class GPTNPC_Dialogue : MonoBehaviour
             // Add NPC reponse to list of messages
             requestData.messages.Add(new Messages { role = "system", content = assistantReply });
 
-           /* Testing purposes
-            Debug.Log(www.downloadHandler.text);
-            Debug.Log("Assistant: " + assistantReply);*/
+            /* Testing purposes
+             Debug.Log(www.downloadHandler.text);
+             Debug.Log("Assistant: " + assistantReply);*/
 
             StartCoroutine(TypeText(assistantReply));
         }
@@ -161,19 +215,24 @@ public class GPTNPC_Dialogue : MonoBehaviour
             Debug.Log("Error sending request: " + www.error);
         }
 
-        sumbitButton.gameObject.SetActive(true);
         canSumbit = true;
     }
 
-     private void LoadingBar()
+     IEnumerator LoadingBar()
     {
-        float progress = Mathf.Clamp01(www.downloadProgress);
-        slider.value = progress;
-        if(progress > 0)
+        slider.value = 0;
+        int completeionInt = 2;
+        float progress = Mathf.Clamp(www.uploadProgress + www.downloadProgress, 0 , completeionInt);
+        while (progress < completeionInt)
         {
-            slider.gameObject.SetActive(false);
-            EditorApplication.update -= LoadingBar;
+            progress = Mathf.Clamp(www.uploadProgress + www.downloadProgress, 0, completeionInt);
+            slider.value = slider.value < progress ? slider.value + progress * .01f : slider.value;
+            yield return new WaitForSeconds(.01f);
         }
+
+        slider.value = completeionInt;
+        slider.gameObject.SetActive(false);
+
     }
 
     IEnumerator TypeText(string text)
@@ -184,6 +243,9 @@ public class GPTNPC_Dialogue : MonoBehaviour
             textField.text += c;
             yield return new WaitForSeconds(typingSpeed);
         }
+
+        submitButton.gameObject.SetActive(true);
+        closeButton.gameObject.SetActive(true);
     }
 
     public string RemoveSpeechMarks(string input)

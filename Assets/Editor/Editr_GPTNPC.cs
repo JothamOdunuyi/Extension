@@ -24,13 +24,14 @@ public class Editor_GPTNPC : EditorWindow
     private bool name_introduction;
     private bool assume_assitance;
     private bool hasAge;
+    public string whoIsTalking = "Stranger";
 
     private float baseWidth = 150f;
     private float extendedWidth = 300f;
 
     private const int tokenWarning = 500;
 
-    [MenuItem("Open AI/Create COOL GPT NPC")]
+    [MenuItem("Open AI/Create New GPT NPC")]
     static void Init()
     {
         Editor_GPTNPC window = (Editor_GPTNPC)EditorWindow.GetWindow(typeof(Editor_GPTNPC));
@@ -69,6 +70,9 @@ public class Editor_GPTNPC : EditorWindow
         EditorGUILayout.LabelField("Language*", EditorStyles.boldLabel, GUILayout.Width(baseWidth));
         language = EditorGUILayout.TextField(language, GUILayout.Width(baseWidth)); //REQUIRED
 
+        EditorGUILayout.LabelField("Who the player is to the NPC (Only write names here, I.E Tom)");
+        whoIsTalking = EditorGUILayout.TextField(location, GUILayout.Width(extendedWidth));
+
         EditorGUILayout.LabelField("World Name");
         world_name = EditorGUILayout.TextField(world_name, GUILayout.Width(baseWidth));
 
@@ -89,9 +93,9 @@ public class Editor_GPTNPC : EditorWindow
         if (GUILayout.Button("Submit"))
         {
 
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(personality) || string.IsNullOrEmpty(language))
+            if (string.IsNullOrEmpty(NPC_Name) || string.IsNullOrEmpty(personality) || string.IsNullOrEmpty(language) || creativity > 1 || !GameObject.Find("Dialogue_Canvas"))
             {
-                EditorUtility.DisplayDialog("Error", "Name, Personality and Language are all required fields.", "OK");
+                EditorUtility.DisplayDialog("Error", "Name, Personality and Language are all required fields. Creativity cannot be above 1. \"Dialogue_Canvas\" must be an active GameObject and in the scene.", "OK");
             }
             else
             {
@@ -106,6 +110,7 @@ public class Editor_GPTNPC : EditorWindow
                 newNPC.location = location;
                 newNPC.creativity = Mathf.Clamp(creativity, 0, 1);
                 newNPC.language = language;
+                newNPC.whoIsTalking = whoIsTalking;
                 newNPC.name_introduction = name_introduction;
                 newNPC.assume_assitance = assume_assitance;
                 newNPC.world_name = world_name;
@@ -126,19 +131,22 @@ public class Editor_GPTNPC : EditorWindow
 
                 if (gameObject)
                 {
-
-                    gameObject.AddComponent(Type.GetType("GPTNPC_Dialogue, Assembly-CSharp"));
+                    // Only creates a new script when it is now present
+                    if (!gameObject.GetComponent<GPTNPC_Dialogue>()) {
+                        gameObject.AddComponent(Type.GetType("GPTNPC_Dialogue, Assembly-CSharp"));
+                    }
 
                     GPTNPC_Dialogue GPTNPC = gameObject.GetComponent<GPTNPC_Dialogue>();
                     Transform dialogueCanvas = GameObject.Find("Dialogue_Canvas").transform;
 
                     GPTNPC.NPC = newNPC;
-                    GPTNPC.textField = dialogueCanvas.Find("TMP").GetComponent<TMP_Text>();
+                    GPTNPC.textField = dialogueCanvas.Find("Converation_TMP").GetComponent<TMP_Text>();
                     GPTNPC.inputField = dialogueCanvas.Find("InputField").GetComponent<TMP_InputField>();
-                    GPTNPC.sumbitButton = dialogueCanvas.Find("Button").GetComponent<UnityEngine.UI.Button>();
+                    GPTNPC.submitButton = dialogueCanvas.Find("Submit Button").GetComponent<UnityEngine.UI.Button>();
+                    GPTNPC.closeButton = dialogueCanvas.Find("Close Button").GetComponent<UnityEngine.UI.Button>();
                     GPTNPC.slider = dialogueCanvas.Find("Slider").GetComponent<UnityEngine.UI.Slider>();
 
-                    Debug.Log("Added component with ScriptableObject");
+                    Debug.Log($"{gameObject.name} has been successfully set up");
                 }
                 else
                 {

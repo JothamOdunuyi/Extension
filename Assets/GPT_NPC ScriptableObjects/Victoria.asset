@@ -10,13 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b803f16ea2cf6a94495ae4d4bdd47e67, type: 3}
-  m_Name: ada
+  m_Name: Victoria
   m_EditorClassIdentifier: 
-  name: ada
-  personality: da
-  job: d
-  location: 
+  name: Victoria
+  gender: Female
+  age: 18
+  personality: Tsundere, cute
+  backstory: A simple girl from a small town with a good upbringing, looking for
+    a lover.
+  job: Student
+  location: Japan
   creativity: 0.5
   name_introduction: 0
+  assume_assitance: 0
+  hasAge: 0
   language: English
-  world_name: 
+  world_name: Earth
+  world_setting: 

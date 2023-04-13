@@ -5,7 +5,6 @@ using UnityEditor.Experimental.GraphView;
 using System.Runtime.InteropServices;
 using UnityEditor.PackageManager.UI;
 using UnityEngine.Networking;
-using static APIRequest;
 using System.Reflection;
 using UnityEditor.PackageManager.Requests;
 using System.Text.RegularExpressions;
@@ -25,7 +24,7 @@ public class AddScriptEditorWindow : EditorWindow
     // Please don't request too much, and please use ur own API key if u have one
     public const string apiKey = "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";
 
-    private string strin = "Use C# Unity to write code, assume every task I give u requires a new C# script. ";
+    private string strin = "Only respond with Unity C# code, code must make a class with unique name. ";
 
     // API Model and settings
     private string model = "text-davinci-003";
@@ -39,7 +38,7 @@ public class AddScriptEditorWindow : EditorWindow
     private MonoScript scriptGenerated;
     string textInput;
 
-    [MenuItem("Open AI/Add Script")]
+    [MenuItem("Open AI/Generate Script")]
     static void Init()
     {
         AddScriptEditorWindow window = (AddScriptEditorWindow)EditorWindow.GetWindow(typeof(AddScriptEditorWindow));
@@ -224,6 +223,7 @@ public class AddScriptEditorWindow : EditorWindow
         else
         {
             Debug.LogError("No game object selected.");
+            EditorPrefs.DeleteKey(key);
         }
     }
     #endregion
