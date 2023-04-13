@@ -15,7 +15,7 @@ using Player;
 
 public class GPTNPC_Dialogue : MonoBehaviour
 {
-    private string apiKey = "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"; // Replace with your OpenAI API key
+    private string apiKey = "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"; 
     private string gpt3Endpoint = "https://api.openai.com/v1/chat/completions";
     private const float typingSpeed = 0.037f;
     private bool canSumbit = true;
