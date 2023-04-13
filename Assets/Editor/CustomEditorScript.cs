@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-[CustomEditor(typeof(GameObject))]
+/*[CustomEditor(typeof(GameObject))]
 public class CustomEditorScript : Editor
 {
 
@@ -21,7 +21,7 @@ public class CustomEditorScript : Editor
         GUILayout.EndHorizontal();
     }
 }
-
+*/
 
 /*[InitializeOnLoad]
 public static class AddCustomComponentButton
