@@ -71,7 +71,7 @@ public class Editor_GPTNPC : EditorWindow
         language = EditorGUILayout.TextField(language, GUILayout.Width(baseWidth)); //REQUIRED
 
         EditorGUILayout.LabelField("Who the player is to the NPC (Only write names here, I.E Tom)");
-        whoIsTalking = EditorGUILayout.TextField(location, GUILayout.Width(extendedWidth));
+        whoIsTalking = EditorGUILayout.TextField(whoIsTalking, GUILayout.Width(extendedWidth));
 
         EditorGUILayout.LabelField("World Name");
         world_name = EditorGUILayout.TextField(world_name, GUILayout.Width(baseWidth));
