@@ -4,6 +4,7 @@ using TMPro;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.UIElements;
 
 public class Editor_GPTNPC : EditorWindow
@@ -68,33 +69,58 @@ public class Editor_GPTNPC : EditorWindow
         EditorGUILayout.EndVertical();
     }
 
-    private void CreateUIWithInstruction(ref string field, string labelContent, GUIStyle style, bool extendedWidth, params GUILayoutOption[] layout)
+    // Generics prevent overloading functions, DRY
+    private void CreateUIWithInstruction<T>(ref T field, string InstructionContent, GUIStyle style, bool extendedWidth, params GUILayoutOption[] layout)
     {
+        GUIStyle helpStyle = new GUIStyle(EditorStyles.largeLabel);
+        helpStyle.fontStyle = FontStyle.Bold;
+        helpStyle.fontSize = 12;
+        helpStyle.padding = new RectOffset(extendedWidth ? 20 : 170, 0, -10, 0);
+        helpStyle.clipping = UnityEngine.TextClipping.Overflow;
+
+        EditorGUILayout.BeginHorizontal();
+        
+        // Get type and make correct field
+        if (typeof(T) == typeof(string))
+        {
+            string stringValue = Convert.ToString(field);
+            stringValue = EditorGUILayout.TextField(stringValue, style, layout);
+        }
+        else if (typeof(T) == typeof(float))
+        {
+            float floatValue = Convert.ToSingle(field);
+            floatValue = EditorGUILayout.FloatField(floatValue, style, layout);
+        }
+    /*    else
+        {
+            bool boolValue = Convert.ToBoolean(field);
+            boolValue = EditorGUILayout.Toggle(boolValue, style, layout);
+        }*/
+         
+        EditorGUILayout.LabelField(InstructionContent, helpStyle, GUILayout.Width(-5)); //-5 to make everything align
+
+        EditorGUILayout.EndHorizontal();
+    }
+
+
+
+    private void CreateToggleWithInstruction(ref bool toggle, string toggleContent, string InstructionContent)
+    {
+
+        GUILayout.BeginHorizontal();
+
+        toggle = EditorGUILayout.Toggle(toggleContent, toggle);
 
         GUIStyle helpStyle = new GUIStyle(EditorStyles.largeLabel);
         helpStyle.fontStyle = FontStyle.Bold;
         helpStyle.fontSize = 12;
-        if (!extendedWidth)
-        {
-            helpStyle.padding = new RectOffset(170, 0, -5, 0);
-        }
-        else
-        {
-            helpStyle.padding = new RectOffset(20, 0, 0, 0);
-        }
+        helpStyle.padding = new RectOffset(50, 0, 0, 0);
         helpStyle.clipping = UnityEngine.TextClipping.Overflow;
 
-        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField(InstructionContent, helpStyle); //-5 to make everything align
 
-        field = EditorGUILayout.TextField(field, style, layout);
-        EditorGUILayout.LabelField(labelContent, helpStyle, GUILayout.Width(-5)); //-5 to make everything align
-
-        EditorGUILayout.EndHorizontal();
-
-
+        GUILayout.EndHorizontal();
     }
-
-
 
     private void OnGUI()
     {
@@ -132,8 +158,11 @@ public class Editor_GPTNPC : EditorWindow
 
 
         //NPC_Name = EditorGUILayout.TextField(NPC_Name, ); //REQUIRED
-        CreateUIWithInstruction(ref NPC_Name, "No full stops", textStyle, false, GUILayout.Width(baseWidth));
-       
+       // CreateUIWithInstruction(ref NPC_Name, "No full stops", textStyle, false);
+        //NPC_Name = EditorGUILayout.TextField(NPC_Name, textStyle, GUILayout.Width(baseWidth));
+        CreateUIWithInstruction(ref NPC_Name, "Do NOT \n use full stops in any field", textStyle, false, GUILayout.Width(baseWidth));
+
+
         EditorGUILayout.LabelField("Personality Traits*", EditorStyles.boldLabel, GUILayout.Width(120));
         CreateUIWithInstruction(ref personality, "No captialization \n Example: friendly, caring" , textStyle, true, GUILayout.Width(extendedWidth), GUILayout.Height(extendedheight));
 
@@ -149,10 +178,10 @@ public class Editor_GPTNPC : EditorWindow
         gender = EditorGUILayout.TextField(gender, textStyle, GUILayout.Width(baseWidth));
 
         EditorGUILayout.LabelField("Age");
-        age = EditorGUILayout.IntField(age, GUILayout.Width(baseWidth));
+        age = EditorGUILayout.IntField(age, textStyle, GUILayout.Width(baseWidth));
 
         EditorGUILayout.LabelField("Backstory");
-        CreateUIWithInstruction(ref backstory, "Direction addressing only \n Example: You saved the world from the \n demong king, but you now wish for a simple and peaceful life", textStyle, true, GUILayout.Width(extendedWidth), GUILayout.Height(extendedheight));
+        CreateUIWithInstruction(ref backstory, "Direction addressing only \n Example: You saved the world from the \n demong king, but you now wish for a simple \n and peaceful life", textStyle, true, GUILayout.Width(extendedWidth), GUILayout.Height(extendedheight));
 
 
         EditorGUILayout.LabelField("Job / Class");
@@ -162,42 +191,47 @@ public class Editor_GPTNPC : EditorWindow
         EditorGUILayout.Space();
 
         EditorGUILayout.LabelField("Current Location");
-        location = EditorGUILayout.TextField(location, GUILayout.Width(extendedWidth));
+        CreateUIWithInstruction(ref location, "The current location \n of your NPC", textStyle, true, GUILayout.Width(extendedWidth));
+
 
         EditorGUILayout.LabelField("Who the player is to the NPC");
-        CreateUIWithInstruction(ref whoIsTalking, "Do not use \"a\" \n Example: Warrior, Adventurer", textStyle, false, GUILayout.Width(extendedWidth));
+        CreateUIWithInstruction(ref whoIsTalking, "Stranger is the default, heavily advised \n to use a name the character knows", textStyle, true, GUILayout.Width(extendedWidth));
 
 
         EditorGUILayout.LabelField("Creativity (0-1)");
-        creativity = EditorGUILayout.FloatField(creativity, GUILayout.Width(baseWidth));
-
+        CreateUIWithInstruction(ref creativity, "Stranger is the default, heavily advised \n to use a name the character knows", textStyle, false, GUILayout.Width(baseWidth));
 
         EndHeader();
 
         CreateHeader("Character Options");
 
         name_introduction = EditorGUILayout.Toggle("Introduce with Name", name_introduction, GUILayout.Width(baseWidth));
-        assume_assitance = EditorGUILayout.Toggle("Assume Player wants assitance with something", assume_assitance);
-        hasAge = EditorGUILayout.Toggle("NPC age is considered", hasAge);
+
+        CreateToggleWithInstruction(ref assume_assitance, "Assume Assitance", "NPC will assume the player requires assistance");
+
+        CreateToggleWithInstruction(ref hasAge, "Age is considered", "NPC age will be added in the prompt");
 
         EndHeader();
 
         CreateHeader("World Options");
 
         EditorGUILayout.LabelField("World Name");
-        world_name = EditorGUILayout.TextField(world_name, GUILayout.Width(baseWidth));
+        world_name = EditorGUILayout.TextField(world_name, textStyle, GUILayout.Width(baseWidth));
 
         EditorGUILayout.LabelField("World Setting");
-        world_setting = EditorGUILayout.TextField(world_setting, GUILayout.Width(baseWidth));
+        CreateUIWithInstruction(ref world_setting, "World genre \n Example: Dark Fantasy", textStyle, false, GUILayout.Width(baseWidth));
 
         EndHeader();
 
+
         CreateHeader("Estimated Tokens");
 
-        int total_characters = NPC_Name.Length + gender.Length + personality.Length + backstory.Length + job.Length + location.Length + world_name.Length + world_setting.Length + language.Length;
-        EditorGUILayout.LabelField($"Estimated Tokens {(int)(total_characters / 3.5f)} / {tokenWarning}");
+        GUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("Submit"))
+        int total_characters = NPC_Name.Length + gender.Length + personality.Length + backstory.Length + job.Length + location.Length + world_name.Length + world_setting.Length + language.Length;
+        EditorGUILayout.LabelField($"Character Prompt : {(int)(total_characters / 3.5f)} / {tokenWarning}", GUILayout.Width(200));
+
+        if (GUILayout.Button("Submit", GUILayout.Width(100), GUILayout.Height(30)))
         {
 
             if (string.IsNullOrEmpty(NPC_Name) || string.IsNullOrEmpty(personality) || string.IsNullOrEmpty(language) || creativity > 1 || !GameObject.Find("Dialogue_Canvas"))
@@ -264,27 +298,38 @@ public class Editor_GPTNPC : EditorWindow
 
         }
 
+        GUILayout.EndHorizontal();
+
+        EditorGUILayout.LabelField($"Token per \n interaction : {(int)(total_characters + 50 + 225 / 3.5f)}", GUILayout.Width(200), GUILayout.Height(25));
+
+
         GUILayout.EndVertical();
         EndHeader();
 
+      /*  EditorGUILayout.BeginVertical();
         EditorGUILayout.BeginVertical();
-        EditorGUILayout.BeginVertical();
-        CreateHeader("Instructions");
+
+        headerStyle.fontStyle = FontStyle.Bold;
+        headerStyle.fontSize = 18;
+
+        //        foldout = EditorGUILayout.BeginFoldoutHeaderGroup(foldout, new GUIContent(content));
+
+        EditorGUILayout.BeginVertical();//EditorStyles.whiteLabel
+        EditorGUILayout.LabelField("Instructions", headerStyle, GUILayout.Width(300));
+        EditorGUILayout.Separator();
+
         //EditorGUILayout.LabelField("Requirements", headerStyle);
         //EditorGUILayout.Separator();
         GUIStyle subtitleStyle = new GUIStyle(EditorStyles.largeLabel);
         subtitleStyle.fontSize = 16;
+        subtitleStyle.fontStyle = FontStyle.Bold;
         subtitleStyle.padding = new RectOffset(8, 0, -8, 0); //, GUILayout.Height(extendedheight*3)
 
-        GUIStyle instructionsStyle = new GUIStyle(EditorStyles.largeLabel);
-        instructionsStyle.fontSize = 14;
-        instructionsStyle.padding = new RectOffset(8, 0, 10, 0); //, GUILayout.Height(extendedheight*3)
-
         EditorGUILayout.LabelField("Do not use full stops in any field", subtitleStyle, GUILayout.Height(extendedheight * 1.15f), GUILayout.Width(extendedWidth + 60));
-        /*EditorGUILayout.LabelField("No captialization \n Example: friendly, caring", instructionsStyle, GUILayout.Height(extendedheight));
-        EditorGUILayout.LabelField("This field cannot be empty", instructionsStyle, GUILayout.Height(extendedheight));*/
+        *//*EditorGUILayout.LabelField("No captialization \n Example: friendly, caring", instructionsStyle, GUILayout.Height(extendedheight));
+        EditorGUILayout.LabelField("This field cannot be empty", instructionsStyle, GUILayout.Height(extendedheight));*//*
         EndHeader();
-        EditorGUILayout.EndVertical();
+        EditorGUILayout.EndVertical();*/
         GUILayout.EndScrollView();
 
         EditorGUILayout.EndHorizontal();

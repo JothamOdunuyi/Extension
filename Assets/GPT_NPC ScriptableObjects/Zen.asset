@@ -26,6 +26,6 @@ MonoBehaviour:
   assume_assitance: 0
   hasAge: 1
   language: English
-  whoIsTalking: Zengief
+  whoIsTalking: 
   world_name: Lola
   world_setting: Dark Fantasy
