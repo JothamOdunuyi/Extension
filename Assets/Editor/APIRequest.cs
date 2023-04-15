@@ -17,6 +17,7 @@ using System.Text;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
 using System.Runtime.Remoting.Contexts;
+using UnityEditor.UIElements;
 
 public class APIRequest : EditorWindow
 {
@@ -74,16 +75,20 @@ public class APIRequest : EditorWindow
 
     GUIStyle textAreaStyle = new GUIStyle(EditorStyles.textArea);
     GUIStyle promptTextAreaStyle = new GUIStyle(EditorStyles.textArea);
+
+    private bool isTyping;
+
+    Rect promtRect;
   
 
     [MenuItem("Open AI/Ask GPT")]
     static void Init()
     {
-        APIRequest window = (APIRequest)EditorWindow.GetWindow(typeof(APIRequest));
+        APIRequest window = GetWindow<APIRequest>("UnityGPT Chatbot");
         window.Show();
-
-
+        
     }
+
 
     void OnGUI()
     {
@@ -91,14 +96,18 @@ public class APIRequest : EditorWindow
         promptTextAreaStyle.fontSize = 14;
 
         Rect windowRect = new Rect(0, 0, position.width*2, position.height * 4);
+       
 
         Rect conversationRect = new Rect(0, 0, windowRect.width, windowRect.height );
 
+
+        
+
         // Only for Testing purposes
-       // GUILayout.Label("UnityGPT");
+        // GUILayout.Label("UnityGPT");
         //prompt = EditorGUILayout.TextField(prompt);
         GUILayout.BeginVertical();
-        scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(position.width - 10));
+        scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(position.width));
         
         // Add a label field that covers half the window with a fixed width
         EditorGUILayout.LabelField(converation, textAreaStyle, GUILayout.ExpandHeight(true));
@@ -114,31 +123,70 @@ public class APIRequest : EditorWindow
 
         // Draw a button below the text field
         Rect buttonRect = new Rect(textFieldRect.xMax, windowRect.yMax , textFieldRect.width, 10);
-        GUILayout.BeginVertical();
+
+
+        GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        GUILayout.Label("Promt");
 
-        prompt = EditorGUILayout.TextField(prompt, promptTextAreaStyle, GUILayout.Height(40), GUILayout.Width(windowRect.width / 4));
+        // IF statement from https://answers.unity.com/questions/178117/check-if-enter-is-pressed-inside-a-gui-textfield.html
+        // This checks if the Enter key is pressed while in the textfield
+        if (Event.current.Equals(Event.KeyboardEvent("return"))) { Debug.Log("ENTERR"); AttemptRequest();};
+        GUI.SetNextControlName("PromptField");
+        prompt = EditorGUILayout.TextField(prompt, promptTextAreaStyle, GUILayout.Height(40), GUILayout.Width(400));
+        promtRect = GUILayoutUtility.GetLastRect();
 
-        GUI.enabled = canSumbit;
-        if (GUILayout.Button("Compile", GUILayout.Height(40)))
+        if (string.IsNullOrEmpty(prompt))
         {
-            if(prompt.Length < maxCharacters)
-            {
-                Request();
-            }
-            else
-            {
-                EditorUtility.DisplayDialog("Error", $"Promt is over {maxCharacters} characters", "OK");
-            }
-
+            GUI.TextField(new Rect(promtRect.x+1, promtRect.y+1, promtRect.width-2, promtRect.height-2), "Send message...");
+            isTyping = false;
+            EditorGUI.FocusTextInControl("PromptField");
         }
 
-        GUILayout.EndVertical();
+        if (GUI.GetNameOfFocusedControl() == "PromptField")
+        {
+            if (!isTyping)
+            {
+                isTyping = true;
+                Repaint();
+            }
+        }
+
+        GUI.enabled = canSumbit;
+        if (GUILayout.Button("Submit", GUILayout.Height(40)))
+        {
+            AttemptRequest();
+        }
+
+        GUILayout.FlexibleSpace();     
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+
         rememberPrompts = EditorGUILayout.Toggle("Remember prompts", rememberPrompts);
+
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
         GUI.enabled = !canSumbit;
 
 
+
+
+    }
+
+    void AttemptRequest()
+    {
+        if (prompt.Length < maxCharacters)
+        {
+            Request();
+            prompt = ""; 
+            EditorGUIUtility.keyboardControl = 0;
+        }
+        else
+        {
+            EditorUtility.DisplayDialog("Error", $"Promt is over {maxCharacters} characters", "OK");
+        }
     }
 
     private void StartUnityGPT()

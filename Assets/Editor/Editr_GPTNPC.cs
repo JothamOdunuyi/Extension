@@ -28,18 +28,29 @@ public class Editor_GPTNPC : EditorWindow
 
     private float baseWidth = 150f;
     private float extendedWidth = 300f;
+    private float extendedheight = 40;
 
     private const int tokenWarning = 500;
+
+    private const int windowWidth = 312;
+    private const int windowHeight = 646;
+
 
     [MenuItem("Open AI/Create New GPT NPC")]
     static void Init()
     {
-        Editor_GPTNPC window = (Editor_GPTNPC)EditorWindow.GetWindow(typeof(Editor_GPTNPC));
+        Editor_GPTNPC window = GetWindow<Editor_GPTNPC>("GPT_NPC Editor");
+        var position = window.position;
+        position.center = new Rect(0f, 0f, Screen.currentResolution.width / 2, Screen.currentResolution.height / 1.25f).center;
+        window.position = new Rect(position.x, position.y, windowWidth, windowHeight);
         window.Show();
     }
 
     private void OnGUI()
     {
+        /*Editor_GPTNPC window = GetWindow<Editor_GPTNPC>("GPT_NPC Editor");
+        Debug.Log(window.position);*/
+        EditorGUILayout.BeginVertical();
 
         EditorGUILayout.LabelField("Name*", EditorStyles.boldLabel);
         NPC_Name = EditorGUILayout.TextField(NPC_Name, GUILayout.Width(baseWidth)); //REQUIRED
@@ -51,10 +62,10 @@ public class Editor_GPTNPC : EditorWindow
         age = EditorGUILayout.IntField(age, GUILayout.Width(baseWidth)); 
 
         EditorGUILayout.LabelField("Personality Traits*", EditorStyles.boldLabel);
-        personality = EditorGUILayout.TextField(personality, GUILayout.Width(extendedWidth)); //REQUIRED
+        personality = EditorGUILayout.TextField(personality, GUILayout.Width(extendedWidth), GUILayout.Height(extendedheight)); //REQUIRED
 
         EditorGUILayout.LabelField("Backstory");
-        backstory = EditorGUILayout.TextField(backstory, GUILayout.Width(extendedWidth));
+        backstory = EditorGUILayout.TextField(backstory, GUILayout.Width(extendedWidth), GUILayout.Height(extendedheight));
 
         EditorGUILayout.LabelField("Job / Class");
         job = EditorGUILayout.TextField(job, GUILayout.Width(baseWidth));
@@ -155,5 +166,7 @@ public class Editor_GPTNPC : EditorWindow
             }
            
         }
+
+        EditorGUILayout.BeginVertical();
     }
 }

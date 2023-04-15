@@ -256,4 +256,9 @@ public class GPTNPC_Dialogue : MonoBehaviour
         }
         return input;
     }
+
+    void OnDrawGizmos()
+    {
+        Gizmos.DrawIcon(transform.position + Vector3.up * 2, "GPT_NPC Gizmo.png", true);
+    }
 }

@@ -41,7 +41,7 @@ public class AddScriptEditorWindow : EditorWindow
     [MenuItem("Open AI/Generate Script")]
     static void Init()
     {
-        AddScriptEditorWindow window = (AddScriptEditorWindow)EditorWindow.GetWindow(typeof(AddScriptEditorWindow));
+        AddScriptEditorWindow window = GetWindow<AddScriptEditorWindow>("Script Generator");
         window.Show();
     }
 
@@ -205,26 +205,23 @@ public class AddScriptEditorWindow : EditorWindow
         if (!EditorPrefs.HasKey(key))
             return;
 
-        Debug.Log("Scripts reloaded!");
-
         // Add the script as a component to the selected game object
         if (Selection.activeGameObject != null)
         {
             // .cs will NOT work, source for line: https://gist.github.com/tklee1975/d8c4d1ea671f238efd0a5c6902d07d8b
             Type type = Type.GetType(EditorPrefs.GetString(key) + ",Assembly-CSharp");
            
-            Debug.Log("Attempting to add component " + type);
             Selection.activeGameObject.AddComponent(type);
-            Debug.Log("Added component!");
+            Debug.Log($"Added component {type}");
 
-            // Removes key
-            EditorPrefs.DeleteKey(key);
         }
         else
         {
-            Debug.LogError("No game object selected.");
-            EditorPrefs.DeleteKey(key);
+            Debug.LogWarning("No game object was selected, only generated script.");
         }
+
+        EditorPrefs.DeleteKey(key);
+
     }
     #endregion
 
