@@ -86,7 +86,6 @@ public class APIRequest : EditorWindow
     {
         APIRequest window = GetWindow<APIRequest>("UnityGPT Chatbot");
         window.Show();
-        
     }
 
 
@@ -130,7 +129,7 @@ public class APIRequest : EditorWindow
 
         // IF statement from https://answers.unity.com/questions/178117/check-if-enter-is-pressed-inside-a-gui-textfield.html
         // This checks if the Enter key is pressed while in the textfield
-        if (Event.current.Equals(Event.KeyboardEvent("return"))) { Debug.Log("ENTERR"); AttemptRequest();};
+        if (Event.current.Equals(Event.KeyboardEvent("return"))) { AttemptRequest();};
         GUI.SetNextControlName("PromptField");
         prompt = EditorGUILayout.TextField(prompt, promptTextAreaStyle, GUILayout.Height(40), GUILayout.Width(400));
         promtRect = GUILayoutUtility.GetLastRect();
