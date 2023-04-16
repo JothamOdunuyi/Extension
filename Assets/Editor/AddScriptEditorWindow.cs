@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Net;
 using Unity.Profiling.LowLevel;
 using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 
 public class AddScriptEditorWindow : EditorWindow
 {
@@ -25,8 +26,8 @@ public class AddScriptEditorWindow : EditorWindow
     // Please don't request too much, and please use ur own API key if u have one
     public const string apiKey = "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";
 
-    private string strin = "Only respond with Unity C# code, code must make a class with unique name. ";
-
+    private string assistancePrompt2 = " and make sure the code uses the correct namespaces"; // \"using UnityEngine\" or \" using UnityEditor\" or \"using System\"
+    private string assistancePrompt = $"Only respond with Unity C# code, code must make a class with unique name and inherit from MonoBehaviour or EditorWindow ";
     // API Model and settings
     private string model = "text-davinci-003";
     public float temperature = 0.5f;
@@ -106,7 +107,7 @@ public class AddScriptEditorWindow : EditorWindow
         {
             if (string.IsNullOrEmpty(prompt))
             {
-                GUI.TextField(new Rect(promtRect.x + 1, promtRect.y + 1, promtRect.width - 2, promtRect.height - 2), "Send message...", promptStyle);
+                GUI.TextField(new Rect(promtRect.x + 1, promtRect.y + 1, promtRect.width - 2, promtRect.height - 2), "Create a script that...", promptStyle);
                 isTyping = false;
                 EditorGUI.FocusTextInControl("PromptField");
             }
@@ -175,10 +176,15 @@ public class AddScriptEditorWindow : EditorWindow
          
             // AI often returns example of code in first line, which we do not want
             int firstNewlineIndex = textReponse.IndexOf('\n');
-            string outputString = !textReponse.Substring(firstNewlineIndex, firstNewlineIndex).Contains("using") ? textReponse : textReponse.Substring(firstNewlineIndex + 1);
+            //string outputString = !textReponse.Substring(firstNewlineIndex, firstNewlineIndex).Contains("using") ? textReponse : textReponse.Substring(firstNewlineIndex + 1);
+
+            /* Debug.Log(!textReponse.Substring(firstNewlineIndex, firstNewlineIndex).Contains("using"));
+             Debug.Log(outputString);*/
 
             /*//if you wish to see the code in console
             Debug.Log(outputString);*/
+
+            string outputString = textReponse;
 
             // Deal with actually implementing the Script
             AddNewScript(ExtractClassName(textReponse), outputString);
@@ -192,7 +198,7 @@ public class AddScriptEditorWindow : EditorWindow
     void Request()
     {
         // Create a JSON object with the necessary parameters, Unity's JsonUtility.ToJson failed me
-        string toJson = "{\"prompt\":\"" + strin  + prompt + "\",\"model\":\"" + model + "\",\"temperature\":" + temperature + ",\"max_tokens\":" + maxTokens + "}";
+        string toJson = "{\"prompt\":\"" + assistancePrompt + assistancePrompt2 + prompt + "." + "\",\"model\":\"" + model + "\",\"temperature\":" + temperature + ",\"max_tokens\":" + maxTokens + "}";
         //newBody = new requestBody(prompt, model, temperature.ToString(), maxTokens.ToString());
 
 
@@ -248,7 +254,7 @@ public class AddScriptEditorWindow : EditorWindow
         className = localClassName == null ? "GeneratedScript" : localClassName;
 
         // Set script path
-        string scriptPath = AssetDatabase.GenerateUniqueAssetPath("Assets/" + className + ".cs");
+        string scriptPath = AssetDatabase.GenerateUniqueAssetPath("Assets/GeneratedScripts/" + className + ".cs");
         System.IO.File.WriteAllText(scriptPath, scriptContents);
 
         // Wihtout this function the generated script will always be added to selected GameObject every compile
@@ -288,6 +294,43 @@ public class AddScriptEditorWindow : EditorWindow
         EditorPrefs.DeleteKey(key);
 
     }
+    #endregion
+
+
+    #region Data Classes
+
+    [System.Serializable]
+    public class RequestData
+    {
+        public string model;
+        public List<Messages> messages;
+    }
+
+    [System.Serializable]
+    public class Messages
+    {
+        public string role;
+        public string content;
+    }
+
+    [System.Serializable]
+    public class ResponseData
+    {
+        public string id;
+        public string object_name;
+        public string created;
+        public string model;
+        public string usage;
+        public List<Choices> choices;
+    }
+
+    [System.Serializable]
+    public class Choices
+    {
+        public Messages message;
+        public double finish_probability;
+    }
+
     #endregion
 
     #region Reponse Classes
