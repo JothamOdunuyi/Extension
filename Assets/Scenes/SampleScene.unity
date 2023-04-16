@@ -3097,14 +3097,33 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1547227033}
+  - component: {fileID: 1547227032}
   - component: {fileID: 1547227034}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: Error Demonstration
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &1547227032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547227031}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93db03597c19e4d44839393e190788be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  NPC: {fileID: 0}
+  textField: {fileID: 0}
+  inputField: {fileID: 0}
+  submitButton: {fileID: 0}
+  closeButton: {fileID: 0}
+  slider: {fileID: 0}
 --- !u!4 &1547227033
 Transform:
   m_ObjectHideFlags: 0
@@ -3126,12 +3145,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1547227031}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 93db03597c19e4d44839393e190788be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  NPC: {fileID: 11400000, guid: afce650f1ea221145bd15587be231842, type: 2}
+  NPC: {fileID: 0}
   textField: {fileID: 137853134}
   inputField: {fileID: 1724963444}
   submitButton: {fileID: 2127348508}

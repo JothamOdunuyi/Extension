@@ -10,7 +10,6 @@ using UnityEngine.UIElements;
 
 public class Editor_GPTNPC : EditorWindow
 {
-
     // Strings are delcared as "" so that string.Length will not return null
     private string NPC_Name = "";
     public string gender =  "";
@@ -22,11 +21,15 @@ public class Editor_GPTNPC : EditorWindow
     private string world_setting = "";
     private string language = "English";
     public string whoIsTalking = "Stranger";
-    public int age = 18;
-    private float creativity = .5f;
     private bool name_introduction;
     private bool assume_assitance;
     private bool hasAge;
+    private bool setTextStyles;
+    public int age = 18;
+    private float creativity = .5f;
+    private const int tokenWarning = 500;
+    private Vector2 scrollPosition = Vector2.zero;
+    private static Editor_GPTNPC window;
 
     //UI values
     private float baseWidth = 150f;
@@ -36,10 +39,6 @@ public class Editor_GPTNPC : EditorWindow
     // Window Values, const allows static access
     private const int windowWidth = 652;
     private const int windowHeight = 646;
-
-    private const int tokenWarning = 500;
-    private Vector2 scrollPosition = Vector2.zero;
-    private bool setTextStyles;
 
     //Styles
     GUIStyle textStyle = new GUIStyle(EditorStyles.textArea);
@@ -51,109 +50,132 @@ public class Editor_GPTNPC : EditorWindow
     [MenuItem("Open AI/Create New GPT NPC")]
     static void Init()
     {
-        Editor_GPTNPC window = GetWindow<Editor_GPTNPC>("GPT_NPC Generator");
-        var position = window.position;
-        position.center = new Rect(0f, 0f, Screen.currentResolution.width / 2, Screen.currentResolution.height / 1.25f).center;
-        //window.position = new Rect(position.x, position.y, windowWidth, windowHeight);
+        window = GetWindow<Editor_GPTNPC>("GPT NPC Creator");
+     
         window.maxSize = new Vector2(windowWidth, windowHeight);
         window.minSize = new Vector2(windowWidth, windowHeight);
+
         window.Show();
     }
 
-    #region UI Creation Methods
-
-    private void CreateHeader(string content)
-    {
-
-        GUIStyle headerStyle = new GUIStyle(EditorStyles.boldLabel);
-        headerStyle.fontStyle = FontStyle.Bold;
-        headerStyle.fontSize = 18;
-
-        //        foldout = EditorGUILayout.BeginFoldoutHeaderGroup(foldout, new GUIContent(content));
-
-        EditorGUILayout.BeginVertical(EditorStyles.helpBox);//EditorStyles.whiteLabel
-        EditorGUILayout.LabelField(content, headerStyle, GUILayout.Width(300));
-        EditorGUILayout.Separator();
-    }
-
-    // For readability
-    private void EndHeader()
-    {
-        EditorGUILayout.EndVertical();
-    }
-
-    // Generics prevent overloading functions, DRY
-    private void CreateUIWithInstruction<T>(ref T field, string InstructionContent, GUIStyle style, bool extendedWidth, params GUILayoutOption[] layout)
-    {
-
-        helpStyle.padding = new RectOffset(extendedWidth ? 20 : 170, 0, -10, 0);
-
-        EditorGUILayout.BeginHorizontal();
-
-        // Get type and make correct field
-        if (typeof(T) == typeof(string))
-        {
-            string stringValue = field as string; // Only do-able because string is a reference type
-            stringValue = EditorGUILayout.TextField(stringValue, style, layout);
-            field = (T)Convert.ChangeType(stringValue, typeof(T)); // ChangeType returns type Object which is parsable to any type
-        }
-        else if (typeof(T) == typeof(float))
-        {
-            float floatValue = (float)Convert.ChangeType(field, typeof(float));
-            floatValue = EditorGUILayout.FloatField(floatValue, style, layout);
-            field = (T)Convert.ChangeType(floatValue, typeof(T));
-        }
-         
-        EditorGUILayout.LabelField(InstructionContent, helpStyle, GUILayout.Width(-5)); //-5 to make everything align
-        EditorGUILayout.EndHorizontal();
-    }
-
-    private void CreateToggleWithInstruction(ref bool toggle, string toggleContent, string InstructionContent)
-    {
-        GUILayout.BeginHorizontal();
-
-        toggle = EditorGUILayout.Toggle(toggleContent, toggle, GUILayout.Width(270));
-
-        EditorGUILayout.LabelField(InstructionContent, toggleHelpStyle); //-5 to make everything align
-
-        GUILayout.EndHorizontal();
-    }
-    
-    #endregion
-
     private void OnGUI()
     {
-        // Set style settings
-        if (!setTextStyles)
+
+        #region UI Creation Methods
+
+        void CreateHeader(string content)
         {
-            textStyle.fontSize = 13;
-            textStyle.clipping = UnityEngine.TextClipping.Clip;
-            textStyle.padding = new RectOffset(3, 0, 0, 0);
-            textStyle.normal.textColor = Color.white;
 
-            requiredStyle.fontSize = 12;
-            requiredStyle.clipping = UnityEngine.TextClipping.Clip;
-
+            GUIStyle headerStyle = new GUIStyle(EditorStyles.boldLabel);
             headerStyle.fontStyle = FontStyle.Bold;
             headerStyle.fontSize = 18;
 
-            toggleHelpStyle.fontStyle = FontStyle.Bold;
-            toggleHelpStyle.fontSize = 12;
-            toggleHelpStyle.padding = new RectOffset(50, 0, 0, 0);
-            toggleHelpStyle.clipping = UnityEngine.TextClipping.Overflow;
+            //        foldout = EditorGUILayout.BeginFoldoutHeaderGroup(foldout, new GUIContent(content));
 
-            helpStyle.fontStyle = FontStyle.Bold;
-            helpStyle.fontSize = 12;
-            helpStyle.clipping = UnityEngine.TextClipping.Overflow;
-
-            setTextStyles = true;
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);//EditorStyles.whiteLabel
+            EditorGUILayout.LabelField(content, headerStyle, GUILayout.Width(300));
+            EditorGUILayout.Separator();
         }
-       
+
+        // For readability
+        void EndHeader()
+        {
+            EditorGUILayout.EndVertical();
+        }
+
+        // Generics prevent overloading functions, DRY
+        void CreateUIWithInstruction<T>(ref T field, string InstructionContent, GUIStyle style, bool extendedWidth, params GUILayoutOption[] layout)
+        {
+
+            helpStyle.padding = new RectOffset(extendedWidth ? 20 : 170, 0, -10, 0);
+
+            EditorGUILayout.BeginHorizontal();
+
+            // Get type and make correct field
+            if (typeof(T) == typeof(string))
+            {
+                string stringValue = field as string; // Only do-able because string is a reference type
+                stringValue = EditorGUILayout.TextField(stringValue, style, layout);
+                field = (T)Convert.ChangeType(stringValue, typeof(T)); // ChangeType returns type Object which is parsable to any type
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                float floatValue = (float)Convert.ChangeType(field, typeof(float));
+                floatValue = EditorGUILayout.FloatField(floatValue, style, layout);
+                field = (T)Convert.ChangeType(floatValue, typeof(T));
+            }
+
+            EditorGUILayout.LabelField(InstructionContent, helpStyle, GUILayout.Width(-5)); //-5 to make everything align
+            EditorGUILayout.EndHorizontal();
+        }
+
+        void CreateToggleWithInstruction(ref bool toggle, string toggleContent, string InstructionContent)
+        {
+            GUILayout.BeginHorizontal();
+
+            toggle = EditorGUILayout.Toggle(toggleContent, toggle, GUILayout.Width(270));
+
+            EditorGUILayout.LabelField(InstructionContent, toggleHelpStyle); //-5 to make everything align
+
+            GUILayout.EndHorizontal();
+        }
+
+        // Set style settings
+        void SetTextStyles()
+        {
+            if (!setTextStyles)
+            {
+                textStyle.fontSize = 13;
+                textStyle.clipping = UnityEngine.TextClipping.Clip;
+                textStyle.padding = new RectOffset(3, 0, 0, 0);
+                textStyle.normal.textColor = Color.white;
+
+                requiredStyle.fontSize = 12;
+                requiredStyle.clipping = UnityEngine.TextClipping.Clip;
+
+                headerStyle.fontStyle = FontStyle.Bold;
+                headerStyle.fontSize = 18;
+
+                toggleHelpStyle.fontStyle = FontStyle.Bold;
+                toggleHelpStyle.fontSize = 12;
+                toggleHelpStyle.padding = new RectOffset(50, 0, 0, 0);
+                toggleHelpStyle.clipping = UnityEngine.TextClipping.Overflow;
+
+                helpStyle.fontStyle = FontStyle.Bold;
+                helpStyle.fontSize = 12;
+                helpStyle.clipping = UnityEngine.TextClipping.Overflow;
+
+                setTextStyles = true;
+            }
+        }
+
+        void SubmitButton()
+        { 
+            if (GUILayout.Button("Submit", GUILayout.Width(100), GUILayout.Height(30)))
+            {
+
+                if (string.IsNullOrEmpty(NPC_Name) || string.IsNullOrEmpty(personality) || string.IsNullOrEmpty(language) || creativity > 1 || !GameObject.Find("Dialogue_Canvas"))
+                {
+                    EditorUtility.DisplayDialog("Error", "1. Fill out all required fields \n2. Creativity cannot be above 1. \n3. \"Dialogue_Canvas\" must be an active GameObject and in the scene.", "OK");
+                }
+                else
+                {
+                    SubmitData();
+                }
+
+            }
+        }
+
+        #endregion
+
+        SetTextStyles();
+
         scrollPosition = GUILayout.BeginScrollView(scrollPosition);
         EditorGUILayout.BeginHorizontal(EditorStyles.textArea);
         EditorGUILayout.BeginVertical();
 
         CreateHeader("Requirements");
+
         EditorGUILayout.BeginHorizontal();
 
         EditorGUILayout.LabelField("Name*", EditorStyles.boldLabel, GUILayout.Width(50));
@@ -164,7 +186,6 @@ public class Editor_GPTNPC : EditorWindow
 
         EditorGUILayout.LabelField("Personality Traits*", EditorStyles.boldLabel, GUILayout.Width(120));
         CreateUIWithInstruction(ref personality, "No captialization \n Example: friendly, caring" , textStyle, true, GUILayout.Width(extendedWidth), GUILayout.Height(extendedheight));
-
 
         EditorGUILayout.LabelField("Language*", EditorStyles.boldLabel, GUILayout.Width(baseWidth), GUILayout.Width(125));
         language = EditorGUILayout.TextField(language, GUILayout.Width(baseWidth));
@@ -223,19 +244,7 @@ public class Editor_GPTNPC : EditorWindow
         int total_characters = NPC_Name.Length + gender.Length + personality.Length + backstory.Length + job.Length + location.Length + world_name.Length + world_setting.Length + language.Length;
         EditorGUILayout.LabelField($"Character Prompt : {(int) (total_characters / 3.5f)} / {tokenWarning}", GUILayout.Width(200));
 
-        if (GUILayout.Button("Submit", GUILayout.Width(100), GUILayout.Height(30)))
-        {
-
-            if (string.IsNullOrEmpty(NPC_Name) || string.IsNullOrEmpty(personality) || string.IsNullOrEmpty(language) || creativity > 1 || !GameObject.Find("Dialogue_Canvas"))
-            {
-                EditorUtility.DisplayDialog("Error", "1. Please fill out all required fields \n2. Creativity cannot be above 1. \n3. \"Dialogue_Canvas\" must be an active GameObject and in the scene.", "OK");
-            }
-            else
-            {
-                SubmitData();
-            }
-
-        }
+        SubmitButton();
 
         GUILayout.EndHorizontal();
 
@@ -252,20 +261,26 @@ public class Editor_GPTNPC : EditorWindow
     {
         GPT_NPC newNPC = ScriptableObject.CreateInstance<GPT_NPC>();
 
-        newNPC.name = NPC_Name;
-        newNPC.gender = gender;
-        newNPC.age = age;
-        newNPC.personality = personality;
-        newNPC.backstory = backstory;
-        newNPC.job = job;
-        newNPC.location = location;
-        newNPC.creativity = Mathf.Clamp(creativity, 0, 1);
-        newNPC.language = language;
-        newNPC.whoIsTalking = whoIsTalking;
-        newNPC.name_introduction = name_introduction;
-        newNPC.assume_assitance = assume_assitance;
-        newNPC.world_name = world_name;
-        newNPC.world_setting = world_setting;
+        // Put all the values typed into the new ScriptableObject
+        void SetNewNPCValues() 
+        {
+            newNPC.name = NPC_Name;
+            newNPC.gender = gender;
+            newNPC.age = age;
+            newNPC.personality = personality;
+            newNPC.backstory = backstory;
+            newNPC.job = job;
+            newNPC.location = location;
+            newNPC.creativity = Mathf.Clamp(creativity, 0, 1);
+            newNPC.language = language;
+            newNPC.whoIsTalking = whoIsTalking;
+            newNPC.name_introduction = name_introduction;
+            newNPC.assume_assitance = assume_assitance;
+            newNPC.world_name = world_name;
+            newNPC.world_setting = world_setting;
+        }
+
+        SetNewNPCValues();
 
         // Set the asset path and name
         string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath("Assets/GPT_NPC ScriptableObjects/" + NPC_Name + ".asset");
@@ -290,6 +305,7 @@ public class Editor_GPTNPC : EditorWindow
             GPTNPC_Dialogue GPTNPC = gameObject.GetComponent<GPTNPC_Dialogue>();
             Transform dialogueCanvas = GameObject.Find("Dialogue_Canvas").transform;
 
+            // Set the new script's values
             GPTNPC.NPC = newNPC;
             GPTNPC.textField = dialogueCanvas.Find("Converation_TMP").GetComponent<TMP_Text>();
             GPTNPC.inputField = dialogueCanvas.Find("InputField").GetComponent<TMP_InputField>();
@@ -303,5 +319,7 @@ public class Editor_GPTNPC : EditorWindow
         {
             Debug.LogWarning("No Gameobject was selected, you can find the GPT NPC ScriptableObject in Assets/GPT_NPC ScriptableObjects/");
         }
+
+        window.Close();
     }
 }
