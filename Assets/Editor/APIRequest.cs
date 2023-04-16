@@ -96,15 +96,6 @@ public class APIRequest : EditorWindow
 
         Rect windowRect = new Rect(0, 0, position.width*2, position.height * 4);
        
-
-        Rect conversationRect = new Rect(0, 0, windowRect.width, windowRect.height );
-
-
-        
-
-        // Only for Testing purposes
-        // GUILayout.Label("UnityGPT");
-        //prompt = EditorGUILayout.TextField(prompt);
         GUILayout.BeginVertical();
         scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(position.width));
         

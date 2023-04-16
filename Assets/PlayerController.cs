@@ -122,12 +122,6 @@ namespace Player
                 }
             }
         }
-
-      /*  void OnDrawGizmos()
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(ground_check.position, ground_radius);
-        }*/
     }
 
 }

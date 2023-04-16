@@ -10,6 +10,7 @@ using UnityEditor.PackageManager.Requests;
 using System.Text.RegularExpressions;
 using System.Net;
 using Unity.Profiling.LowLevel;
+using System.Runtime.CompilerServices;
 
 public class AddScriptEditorWindow : EditorWindow
 {
@@ -33,57 +34,121 @@ public class AddScriptEditorWindow : EditorWindow
 
     private int maxCharacters = 200;
 
+    //Styles
+    GUIStyle promptStyle = new GUIStyle(EditorStyles.textArea);
+    GUIStyle buttonStyle = new GUIStyle(EditorStyles.boldLabel);
+
+    // Window Values, const allows static access
+    private const int windowWidth = 585;
+    private const int windowHeight = 100;
+
     // Globals
     private UnityWebRequest thisReq;
     private MonoScript scriptGenerated;
     string textInput;
+    private int maxCharactersOver = -1; //as long as its not > 0
+    private bool isTyping;
+
+    GameObject activeGameObject;
 
     [MenuItem("Open AI/Generate Script")]
     static void Init()
     {
         AddScriptEditorWindow window = GetWindow<AddScriptEditorWindow>("Script Generator");
+        window.minSize = new Vector2(windowWidth, windowHeight);
+        window.maxSize = new Vector2(windowWidth + 140, windowHeight + 50);
         window.Show();
     }
 
     void OnGUI()
-    {/*
-        // Only for Testing purposes
-        *//* GUILayout.Label("Instruction");
-        strin = EditorGUILayout.TextField(strin);*/
+    {
+
+        promptStyle.fontSize = 16;
+        promptStyle.normal.textColor = Color.white;
+        buttonStyle.normal.textColor = Color.white;
+        buttonStyle.alignment = TextAnchor.MiddleCenter;
+
+        AddScriptEditorWindow window = GetWindow<AddScriptEditorWindow>("CoolThing");
+        //Debug.Log(window.position);
 
         Rect windowRect = new Rect(0, 0, position.width, position.height);
 
         // Set the text field size to match the window size
         Rect textFieldRect = new Rect(10, 10, windowRect.width - 20, windowRect.height - 60);
 
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.Space();
+        GUILayout.Label(maxCharactersOver >= 0 ? $"Max Characters!! ({maxCharactersOver})" : "", buttonStyle, GUILayout.Width(150), GUILayout.Height(15));
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+        EditorGUILayout.EndHorizontal();
+
+        EditorGUILayout.BeginHorizontal();
+
         EditorGUI.BeginChangeCheck();
-        // Draw the text field
-        prompt = EditorGUI.TextField(textFieldRect, prompt.Substring(0,Mathf.Clamp(prompt.Length, 0, maxCharacters)));
+
+        if (Event.current.Equals(Event.KeyboardEvent("return"))) {
+            if(maxCharactersOver < 0) {
+                Request();
+            }
+        };
+
+        GUI.SetNextControlName("PromptField");
+        prompt = EditorGUILayout.TextField(prompt.Substring(0, Mathf.Clamp(prompt.Length, 0, maxCharacters)), promptStyle, GUILayout.Width(windowWidth - 80), GUILayout.Height(windowHeight - 20));
         if (EditorGUI.EndChangeCheck())
         {
-           if(prompt.Length > maxCharacters)
+            maxCharactersOver = prompt.Length - maxCharacters;
+        }
+
+        Rect promtRect = GUILayoutUtility.GetLastRect();
+
+        void SendMessageInPromp()
+        {
+            if (string.IsNullOrEmpty(prompt))
             {
-                Debug.Log("max length reached");
+                GUI.TextField(new Rect(promtRect.x + 1, promtRect.y + 1, promtRect.width - 2, promtRect.height - 2), "Send message...", promptStyle);
+                isTyping = false;
+                EditorGUI.FocusTextInControl("PromptField");
             }
 
+            if (GUI.GetNameOfFocusedControl() == "PromptField")
+            {
+                if (!isTyping)
+                {
+                    isTyping = true;
+                    Repaint();
+                }
+            }
         }
-        //prompt = prompt.Substring(Mathf.Clamp(prompt.Length, 0, 200));
-        //char[] f = prompt.ToCharArray();
 
-        // Draw a button below the text field
-        Rect buttonRect = new Rect(textFieldRect.x, textFieldRect.yMax + 10, textFieldRect.width, 30);
-        if (GUI.Button(buttonRect, "Submit"))
+        SendMessageInPromp();
+
+        EditorGUILayout.BeginVertical();
+
+        EditorGUI.BeginDisabledGroup(true); // Disable editing of the field
+        activeGameObject = EditorGUILayout.ObjectField(Selection.activeGameObject, typeof(GameObject), true, GUILayout.Width(windowWidth - 400), GUILayout.Height(25)) as GameObject;
+        EditorGUI.EndDisabledGroup();
+
+        
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+
+        // Disables the submit button if maxcharacters reached
+        GUI.enabled = maxCharactersOver < 0 ? true : false;
+        if (GUILayout.Button("",GUILayout.Width(windowWidth - 400), GUILayout.Height(40)))
         {
             Request();
         }
+        Rect buttonRect = GUILayoutUtility.GetLastRect();
+        GUI.Label(new Rect(buttonRect.x , buttonRect.y, buttonRect.width, buttonRect.height), "Submit", buttonStyle);
 
-       /* GUILayout.Label("Promt");
-        prompt = EditorGUILayout.TextField(prompt);
-      
-        if (GUILayout.Button("Compile"))
-        {
-            Request();
-        }*/
+
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.EndHorizontal();
+
+ 
+
     }
 
     #region Request Handlers
