@@ -48,7 +48,7 @@ public class Editor_GPTNPC : EditorWindow
     GUIStyle headerStyle = new GUIStyle(EditorStyles.boldLabel);
 
     [MenuItem("Open AI/Create New GPT NPC")]
-    static void Init()
+    static void OpenWindow()
     {
         window = GetWindow<Editor_GPTNPC>("GPT NPC Creator");
      

@@ -210,7 +210,7 @@ public class AddScriptEditorWindow : EditorWindow
 
         if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
         {
-            Debug.Log(request.error);
+            Debug.LogWarning(request.error);
         }
         else
         {

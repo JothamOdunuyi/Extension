@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu( menuName = "GPT NPC", fileName = "New NPC")]
+//[CreateAssetMenu( menuName = "GPT NPC", fileName = "New NPC")]
 public class GPT_NPC : ScriptableObject
 {
     public new string name;
