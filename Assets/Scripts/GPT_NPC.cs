@@ -10,6 +10,7 @@ public class GPT_NPC : ScriptableObject
     public string language = "English";
     public string gender;
     public int age;
+    [TextArea]
     public string backstory;
     public string job;
     public string location;

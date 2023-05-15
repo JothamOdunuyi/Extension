@@ -25,7 +25,7 @@ MonoBehaviour:
   whoIsTalking: Zengief
   creativity: 0.5
   name_introduction: 1
-  assume_assitance: 0
+  assume_assitance: 1
   hasAge: 1
   world_name: Lola
   world_setting: Dark Fantasy
