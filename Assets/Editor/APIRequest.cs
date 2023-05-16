@@ -44,10 +44,18 @@ public class APIRequest : EditorWindow
     GUIStyle textAreaStyle = new GUIStyle(EditorStyles.textArea);
     GUIStyle promptTextAreaStyle = new GUIStyle(EditorStyles.textArea);
 
+    // Window Values, const allows static access
+    private const int windowWidth = 1000;
+    private const int windowHeight = 1000;
+
     [MenuItem("Open AI/Ask GPT")]
     static void OpenWindow()
     {
         APIRequest window = GetWindow<APIRequest>("UnityGPT Chatbot");
+
+        window.maxSize = new Vector2(windowWidth, windowHeight );
+        window.minSize = new Vector2(600, 400);
+
         window.Show();
     }
 

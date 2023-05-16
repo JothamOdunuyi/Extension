@@ -52,7 +52,7 @@ public class Editor_GPTNPC : EditorWindow
     {
         window = GetWindow<Editor_GPTNPC>("GPT NPC Creator");
      
-        window.maxSize = new Vector2(windowWidth, windowHeight);
+        window.maxSize = new Vector2(windowWidth, windowHeight+200);
         window.minSize = new Vector2(windowWidth, windowHeight);
 
         window.Show();
