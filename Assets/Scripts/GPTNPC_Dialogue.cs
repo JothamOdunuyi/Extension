@@ -44,6 +44,7 @@ public class GPTNPC_Dialogue : MonoBehaviour
     private bool canSumbit = true;
     private UnityWebRequest www;
     private RequestData requestData = new RequestData();
+    AudioManager audioManager;
 
     void Start()
     {
@@ -58,12 +59,14 @@ public class GPTNPC_Dialogue : MonoBehaviour
         dialogueCanvas.SetActive(false);
         requestData.messages = new List<Messages>();
         requestData.model = "gpt-3.5-turbo"; // Set the model
+        audioManager = GameObject.Find("Audio Manager").GetComponent<AudioManager>();
 
         SetNPCData();
     }
 
     void GetResponse()
     {
+        audioManager.PlaySound("Button Press");
         StartCoroutine(SendRequest());
     }
 
@@ -88,6 +91,7 @@ public class GPTNPC_Dialogue : MonoBehaviour
     // Reset what has to be and free player
     public void CloseButtonOnClick()
     {
+        audioManager.PlaySound("Button Press");
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         dialogueCanvas.SetActive(false);
 
