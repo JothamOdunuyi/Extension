@@ -1,6 +1,7 @@
 using log4net;
 using NUnit.Framework;
 using System.Collections.Generic;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -17,6 +18,9 @@ public class PresetDiologuesEditorScript : EditorWindow
 
     private UnityWebRequest www;
     private RequestData requestData = new RequestData();
+    bool canSumbit = true;
+
+    private GPT_NPC_PresetDiologues found = null;
 
     [MenuItem("Open AI/Preset Diologue Generator")]
     public static void ShowWindow()
@@ -67,7 +71,8 @@ public class PresetDiologuesEditorScript : EditorWindow
         if (GUILayout.Button("Press Me"))
         {
             //Debug.Log("Button pressed!");
-            GPT_NPC_PresetDiologues found = null;
+            requestData.messages.Clear();
+            found = null;
 
             foreach (GPT_NPC_PresetDiologues item in selectedDialogue.presetDiologues)
             {
@@ -81,16 +86,13 @@ public class PresetDiologuesEditorScript : EditorWindow
             if (found == null){
                 selectedDialogue.presetDiologues.Add(new GPT_NPC_PresetDiologues { NPC = gptNpc, diologues = new List<string>() });
                 found = selectedDialogue.presetDiologues[selectedDialogue.presetDiologues.Count - 1];
-                Debug.Log("Did not find");
-            }
-            else
-            {
-                Debug.Log("Did find");
             }
 
+            
             //found.diologues.Add("NEW THING POG");
 
             SetNPCData();
+            Request();
 
 
 
@@ -104,6 +106,8 @@ public class PresetDiologuesEditorScript : EditorWindow
     void SetNPCData()
     {
         GPT_NPC NPC = gptNpc;
+        requestData.messages = new List<Messages>();
+        requestData.model = "gpt-3.5-turbo";
         string promptInstructions = "";
 
         try
@@ -119,7 +123,6 @@ public class PresetDiologuesEditorScript : EditorWindow
             return;
         }
 
-        Debug.Log(promptInstructions);
         requestData.messages.Add(new Messages { role = "assistant", content = promptInstructions });
 
         if (!string.IsNullOrEmpty(NPC.whoIsTalking))
@@ -133,6 +136,96 @@ public class PresetDiologuesEditorScript : EditorWindow
         Debug.Log($"Say the following as {NPC.name} :\"{selectedDialogue.diologue}\"");
 
 
+    }
+
+    // Send API request
+    private void Request()
+    {
+        // Make sure User cannot spam request
+        if (!canSumbit)
+            return;
+
+        canSumbit = false;
+
+        // Convert request data to JSON
+        string json = JsonUtility.ToJson(requestData);
+
+        // Create UnityWebRequest (Same as putting "POST" at the end
+        www = new UnityWebRequest(gpt3Endpoint, UnityWebRequest.kHttpVerbPOST);
+        www.SetRequestHeader("Authorization", "Bearer " + apiKey);
+        www.SetRequestHeader("Content-Type", "application/json");
+
+        // Encode JSON data as bytes
+        byte[] jsonBytes = Encoding.UTF8.GetBytes(json);
+        www.uploadHandler = new UploadHandlerRaw(jsonBytes);
+        www.uploadHandler.contentType = "application/json";
+
+        // Set download handler to receive response
+        www.downloadHandler = new DownloadHandlerBuffer();
+
+        Debug.Log("Now waiting");
+        www.SendWebRequest();
+
+        // Due to now Update() we use a delegate
+        EditorApplication.update += WaitForRequest;
+    }
+
+    // Wait, then output request
+    private void WaitForRequest()
+    {
+        if (!canSumbit)
+        {
+
+            if (!www.isDone)
+            {
+                float progress = Mathf.Clamp01(www.downloadProgress + www.uploadProgress);
+                if (progress > 0)
+                {
+                    Debug.Log(progress * 100 + "%");
+                }
+
+                return;
+            }
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                // Convert data
+                ResponseData responseData = JsonUtility.FromJson<ResponseData>(www.downloadHandler.text);
+
+                Choices systemMessage = responseData.choices[0];
+                string assistantReply = RemoveSpeechMarks(systemMessage.message.content);
+
+                // Adds AI's reponse to message history
+                requestData.messages.Add(new Messages { role = "system", content = assistantReply });
+
+                found.diologues.Add(assistantReply);
+
+                canSumbit = true;
+
+                // Displays the updated conversation without having to wait for OnGUI
+                //Repaint();
+            }
+            else
+            {
+                Debug.LogWarning("Error sending request: " + www.error);
+            }
+
+            // Remove from delegate
+            EditorApplication.update -= WaitForRequest;
+        }
+        else
+        {
+            EditorApplication.update -= WaitForRequest;
+        }
+    }
+
+    public string RemoveSpeechMarks(string input)
+    {
+        if (input.Contains("\""))
+        {
+            input = input.Replace("\"", "");
+        }
+        return input;
     }
 
     #region Data Classes

@@ -14,12 +14,16 @@ using static UnityEditor.Experimental.GraphView.GraphView;
 using Player;
 using UnityEditor.PackageManager;
 using UnityEditorInternal;
+using System.Linq;
 
 public class GPTNPC_Dialogue : MonoBehaviour
 {
     // Please don't request too much, but have fun! And obviously do not share this key
     private string apiKey = "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"; //OLD KEY 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
     private string gpt3Endpoint = "https://api.openai.com/v1/chat/completions";
+
+    [SerializeField]
+    private bool debugging = false;
 
     [SerializeField]
     public GPT_NPC NPC;
@@ -50,12 +54,14 @@ public class GPTNPC_Dialogue : MonoBehaviour
     private GPTNPC_ScriptableDiologue rootChoiceDiologue;
 
     [SerializeField]
-    public bool saveDiologueHistory = false;
+    private bool saveDiologueHistory = false;
+
+    public bool usePresetDiologue = false;
 
     private GPTNPC_ScriptableDiologue currentChoiceDiologue;
 
     private GameObject dialogueCanvas;
-    private const float typingSpeed = 0.037f;
+    private const float typingSpeed = 0.012f;//0.037f
     private bool canSumbit = true;
     private UnityWebRequest www;
     private RequestData requestData = new RequestData();
@@ -91,13 +97,79 @@ public class GPTNPC_Dialogue : MonoBehaviour
 
         SetNPCData();
     }
+    // Start dialogue when player touches NPC
+    private void OnCollisionEnter(Collision hit)
+    {
+        GameObject player = hit.gameObject;
+        if (player.tag == "Player" && canSumbit)
+        {
+            player.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
+            player.GetComponent<PlayerController>().cursor_locked = false;
+            slider.gameObject.SetActive(false);
+            dialogueCanvas.SetActive(true);
+            currentChoiceDiologue = rootChoiceDiologue;
+
+            // Adds functions to listeners
+            //submitButton.onClick.AddListener(() => GetResponse(1));
+            closeButton.onClick.AddListener(() => CloseButtonOnClick());
+
+            choice1Button.onClick.AddListener(() => GetResponse(1));
+            choice2Button.onClick.AddListener(() => GetResponse(2));
+            choice3Button.onClick.AddListener(() => GetResponse(3));
+
+            // Generate text in real time
+            if (usePresetDiologue)
+            {
+
+                GetPresetResponse();
+            }
+            else
+            {
+                StartCoroutine(SendRequest(string.Empty));
+            }
+
+            
+        }
+    }
+
+    void GetPresetResponse()
+    {
+        if (!canSumbit)
+            return;
+
+        canSumbit = false;
+
+        // (NOT USING) In case the SO hasn't had its dictionary updated
+        //currentChoiceDiologue.FillPresetDiologuesDictonary();
+
+        closeButton.gameObject.SetActive(false);
+        submitButton.gameObject.SetActive(false);
+
+        GPT_NPC_PresetDiologues NPC_Value = currentChoiceDiologue.GetPresetDiologue(NPC);
+        if (debugging && NPC_Value == null)
+        {
+            Debug.LogError($"There is no preset diologue generated for {NPC.name} in GPTNPC_ScriptableDiologue {currentChoiceDiologue.name}. Please generate some in the window Open AI > Preset Diologue Generator.");
+        }
+      
+        List<string> listOfPresetDiologues = NPC_Value.diologues;
+        string presetDiologue = listOfPresetDiologues[UnityEngine.Random.Range(0, listOfPresetDiologues.Count())];
+
+        StartCoroutine(TypeText(presetDiologue));
+
+        canSumbit = true;
+    }
+
+    void HideDisplayButtons()
+    {
+        choice1Button.gameObject.SetActive(false);
+        choice2Button.gameObject.SetActive(false);
+        choice3Button.gameObject.SetActive(false);
+    }
 
     void GetResponse(int choiceNumber)
     {
 
-        choice1Button.gameObject.SetActive(false);
-        choice2Button.gameObject.SetActive(false);
-        choice3Button.gameObject.SetActive(false);
+        HideDisplayButtons();
 
         audioManager.PlaySound("Button Press");
 
@@ -112,7 +184,7 @@ public class GPTNPC_Dialogue : MonoBehaviour
             case 2:
                 userMsg = currentChoiceDiologue.choice2;
                 currentChoiceDiologue = currentChoiceDiologue.choice2Port;
-                break ;
+                break;
             case 3:
                 userMsg = currentChoiceDiologue.choice3;
                 currentChoiceDiologue = currentChoiceDiologue.choice3Port;
@@ -128,7 +200,15 @@ public class GPTNPC_Dialogue : MonoBehaviour
         //    print($"Adding goodbye to currenChoiceDiologue since it is null");
         //}
 
-        StartCoroutine(SendRequest(userMsg));
+        if(usePresetDiologue)
+        {
+            GetPresetResponse();
+        }
+        else
+        {
+            StartCoroutine(SendRequest(userMsg));
+        }
+       
     }
 
     void DisplayChoices()
@@ -137,7 +217,8 @@ public class GPTNPC_Dialogue : MonoBehaviour
         choice2Button.gameObject.SetActive(false);
         choice3Button.gameObject.SetActive(false);
 
-        if (currentChoiceDiologue == null){
+        if (currentChoiceDiologue == null)
+        {
             // Could link choice1 button function to EXIT function
             return;
         }
@@ -161,28 +242,6 @@ public class GPTNPC_Dialogue : MonoBehaviour
         }
 
     }
-    // Start dialogue when player touches NPC
-    private void OnCollisionEnter(Collision hit)
-    {
-        GameObject player = hit.gameObject;
-        if (player.tag == "Player" && canSumbit)
-        {
-            player.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
-            player.GetComponent<PlayerController>().cursor_locked = false;
-            dialogueCanvas.SetActive(true);
-            currentChoiceDiologue = rootChoiceDiologue;
-
-            // Adds functions to listeners
-            //submitButton.onClick.AddListener(() => GetResponse(1));
-            closeButton.onClick.AddListener(() => CloseButtonOnClick());
-
-            choice1Button.onClick.AddListener(() => GetResponse(1));
-            choice2Button.onClick.AddListener(() => GetResponse(2));
-            choice3Button.onClick.AddListener(() => GetResponse(3));
-
-            StartCoroutine(SendRequest(string.Empty));
-        }
-    }
 
     // Reset what has to be and free player
     public void CloseButtonOnClick()
@@ -190,6 +249,7 @@ public class GPTNPC_Dialogue : MonoBehaviour
         audioManager.PlaySound("Button Press");
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         dialogueCanvas.SetActive(false);
+        HideDisplayButtons();
 
         //requestData.messages.Add(new Messages { role = "system", content = "Goodbye" });
         if (saveDiologueHistory)
@@ -233,8 +293,6 @@ public class GPTNPC_Dialogue : MonoBehaviour
         {
             //promptInstructions = $"Role-play as {NPC.name}{(NPC.hasAge ? $",a {NPC.age}-year-old" : null)}{(!string.IsNullOrEmpty(NPC.gender) ? $" {NPC.gender}" : null)} in a{NPC.world_setting} world{(!string.IsNullOrEmpty(NPC.world_name) ? $" called {NPC.world_name}" : null)}. {NPC.name} is:{(!string.IsNullOrEmpty(NPC.job) ? $" a {NPC.job}" : null)}{(!string.IsNullOrEmpty(NPC.location) ? $" currently in a {NPC.location}," : null)} {NPC.personality}.{(NPC.name_introduction ? $" {NPC.name} introduces their self with their name." : null)} {(!string.IsNullOrEmpty(NPC.backstory) ? $"Your backstory is: {NPC.name}: {NPC.backstory}." : null)} {NPC.name} replies: Human-like, as if {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "a stranger")} greeted you, in {NPC.language} and short. {NPC.name} never does the following: say their personality traits, {(NPC.assume_assitance ? $"assume {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "the stranger")} needs assitance and ask if they need it{(NPC.name_introduction ? "," : null)}" : null)} {(!NPC.name_introduction ? "introduce themself with their name" : null)} say \"{NPC.name}\". Remember to never do these things.{(!string.IsNullOrEmpty(NPC.whoIsTalking) ? $"You are greeted by {NPC.whoIsTalking}" : null)}";
             promptInstructions = $"Role-play as {NPC.name}{(NPC.hasAge ? $", a {NPC.age}-year-old" : null)}{(string.IsNullOrEmpty(NPC.gender) ? null : $" {NPC.gender}")} in a{NPC.world_setting} world{(!string.IsNullOrEmpty(NPC.world_name) ? $" called {NPC.world_name}" : null)}. {NPC.name} is:{(!string.IsNullOrEmpty(NPC.job) ? $" a {NPC.job}" : null)}{(!string.IsNullOrEmpty(NPC.location) ? $" currently in a {NPC.location}," : null)} {NPC.personality}.{(NPC.name_introduction ? $" {NPC.name} introduces themselves without using their name." : null)} {(!string.IsNullOrEmpty(NPC.backstory) ? $"Your backstory is: {NPC.name}: {NPC.backstory}." : null)} {NPC.name} replies: Human-like, as if {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "a stranger")} greeted you, in {NPC.language} and short. {NPC.name} never does the following: say their personality traits, {(NPC.assume_assitance ? $"assume {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "the stranger")} needs assistance and ask if they need it{(NPC.name_introduction ? "," : null)}" : null)} {(!NPC.name_introduction ? "introduce themselves with their name" : null)} say \"{NPC.name}\". Remember to never do these things.{(!string.IsNullOrEmpty(NPC.whoIsTalking) ? $" You are greeted by {NPC.whoIsTalking}" : null)}";
-
-            print(promptInstructions);
         }
         catch
         {
@@ -246,7 +304,6 @@ public class GPTNPC_Dialogue : MonoBehaviour
         
         if (!string.IsNullOrEmpty(NPC.whoIsTalking)) {
             requestData.messages.Add(new Messages { role = "user", content = $"I am {NPC.whoIsTalking}" });
-            print("Added extra diolgoue for user saying who is talking since its not nil");
         }
 
     }
