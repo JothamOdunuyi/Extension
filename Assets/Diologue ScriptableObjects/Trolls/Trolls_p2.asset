@@ -14,6 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parentPort: {fileID: 11400000, guid: af4a1b7f913139b49b4b1962cbbef076, type: 2}
   diologue: I'm not going to leave you here, hold on just a little longer!
+  presetDiologues:
+  - NPC: {fileID: 11400000, guid: 4930873cef5eda040b4b6bc6d28ebaf9, type: 2}
+    diologues:
+    - I won't abandon you, stay strong just a bit more!
+    - Don't worry, I won't leave you behind, hang in there!
+    - You're not staying here alone, keep holding on for a little while!
+    - I won't desert you, keep going, it's almost over!
+    - I won't leave you stranded, just hold on a little longer!
+  - NPC: {fileID: 11400000, guid: 03018adc9c8543b4fb5fb7e0b52462b8, type: 2}
+    diologues:
+    - You won't be abandoned here, hold on a bit longer!
+    - I won't leave you behind, just hang on a little while!
+    - I'm not deserting you here, stay strong for a little longer!
+    - You won't be left alone, hold on a little bit more!
+    - I won't abandon you here, keep holding on for a little longer!
+  reset_presetDiologuesDictonary: 0
   choice1Port: {fileID: 0}
   choice1: 
   choice2Port: {fileID: 0}

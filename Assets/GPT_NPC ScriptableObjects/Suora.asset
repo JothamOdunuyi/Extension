@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   name: Suora
   personality: quite, skilful, usually disappears after a few minutes
-  language: English and Latin
+  language: English
   gender: Female
   age: 22
   backstory: you are a long lost mage, its said that you went on a journey five years

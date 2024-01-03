@@ -17,7 +17,14 @@ MonoBehaviour:
     known swordmen! Can you kill a couple goblins so i can see how swordsmen fight?!
   presetDiologues:
   - NPC: {fileID: 11400000, guid: 7db587012b2440841a960ce3a3420e01, type: 2}
-    diologues: []
+    diologues:
+    - Hey there! I see you've got a sword. I have a strong desire to become a skilled
+      swordsman myself. Would you be willing to demonstrate your skills by taking
+      down a couple of goblins? I'd love to witness a true swordsman in action!
+    - Hey! I see you have a sword. I too aspire to become a skilled swordsman. Could
+      you showcase your abilities by taking down a couple of goblins? I am eager
+      to witness the art of swordsmanship firsthand!
+  reset_presetDiologuesDictonary: 0
   choice1Port: {fileID: 11400000, guid: 317ab2faa36584c49aa0b5dd4352cb7a, type: 2}
   choice1: Uh sure
   choice2Port: {fileID: 11400000, guid: a7d7490689423db4eae84a4a5c8eac38, type: 2}

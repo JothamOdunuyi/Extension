@@ -14,6 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parentPort: {fileID: 11400000, guid: da7840a924298a948b101a9dd40ae467, type: 2}
   diologue: Quickly, before the trolls arrive!
+  presetDiologues:
+  - NPC: {fileID: 11400000, guid: 18f9ad59e7aa9df4480294167d32d17d, type: 2}
+    diologues:
+    - Quickly, before the trolls arrive!
+    - Stranger, quickly! Before the trolls arrive!
+  reset_presetDiologuesDictonary: 1
   choice1Port: {fileID: 11400000, guid: 1311b7ca8c6ece34bb9b12a059ccba46, type: 2}
   choice1: W-what's going on?
   choice2Port: {fileID: 11400000, guid: 1311b7ca8c6ece34bb9b12a059ccba46, type: 2}

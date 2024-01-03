@@ -14,6 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parentPort: {fileID: 11400000, guid: af4a1b7f913139b49b4b1962cbbef076, type: 2}
   diologue: Not the time nor place for questions! Hide!
+  presetDiologues:
+  - NPC: {fileID: 11400000, guid: 18f9ad59e7aa9df4480294167d32d17d, type: 2}
+    diologues:
+    - Not now, nor here for inquiries. Conceal yourself!
+    - Sorry for being cryptic, but this is not the time or place for questions. We
+      need to hide immediately!
+  - NPC: {fileID: 11400000, guid: 4930873cef5eda040b4b6bc6d28ebaf9, type: 2}
+    diologues:
+    - No time for questions! We must hide!
+  reset_presetDiologuesDictonary: 0
   choice1Port: {fileID: 0}
   choice1: Okay!
   choice2Port: {fileID: 0}

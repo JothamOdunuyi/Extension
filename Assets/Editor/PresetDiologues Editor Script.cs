@@ -1,5 +1,6 @@
 using log4net;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
@@ -71,7 +72,14 @@ public class PresetDiologuesEditorScript : EditorWindow
         if (GUILayout.Button("Press Me"))
         {
             //Debug.Log("Button pressed!");
-            requestData.messages.Clear();
+            if(requestData.messages != null) { 
+                requestData.messages.Clear(); 
+            }
+            else {
+                requestData.messages = new List<Messages>();
+                requestData.model = "gpt-3.5-turbo";
+            }
+           
             found = null;
 
             foreach (GPT_NPC_PresetDiologues item in selectedDialogue.presetDiologues)
@@ -93,27 +101,30 @@ public class PresetDiologuesEditorScript : EditorWindow
 
             SetNPCData();
             Request();
-
-
-
-
-
+        
 
         }
+
+        //Object[] selectedObjects = Selection.objects;
+        
+
+        //foreach (Object selectedObject in selectedObjects)
+        //{
+        //    Debug.Log("Selected Object: " + selectedObject.name);
+        //}
 
     }
 
     void SetNPCData()
     {
         GPT_NPC NPC = gptNpc;
-        requestData.messages = new List<Messages>();
-        requestData.model = "gpt-3.5-turbo";
+        
         string promptInstructions = "";
 
         try
         {
             //promptInstructions = $"Role-play as {NPC.name}{(NPC.hasAge ? $",a {NPC.age}-year-old" : null)}{(!string.IsNullOrEmpty(NPC.gender) ? $" {NPC.gender}" : null)} in a{NPC.world_setting} world{(!string.IsNullOrEmpty(NPC.world_name) ? $" called {NPC.world_name}" : null)}. {NPC.name} is:{(!string.IsNullOrEmpty(NPC.job) ? $" a {NPC.job}" : null)}{(!string.IsNullOrEmpty(NPC.location) ? $" currently in a {NPC.location}," : null)} {NPC.personality}.{(NPC.name_introduction ? $" {NPC.name} introduces their self with their name." : null)} {(!string.IsNullOrEmpty(NPC.backstory) ? $"Your backstory is: {NPC.name}: {NPC.backstory}." : null)} {NPC.name} replies: Human-like, as if {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "a stranger")} greeted you, in {NPC.language} and short. {NPC.name} never does the following: say their personality traits, {(NPC.assume_assitance ? $"assume {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "the stranger")} needs assitance and ask if they need it{(NPC.name_introduction ? "," : null)}" : null)} {(!NPC.name_introduction ? "introduce themself with their name" : null)} say \"{NPC.name}\". Remember to never do these things.{(!string.IsNullOrEmpty(NPC.whoIsTalking) ? $"You are greeted by {NPC.whoIsTalking}" : null)}";
-            promptInstructions = $"Role-play as {NPC.name}{(NPC.hasAge ? $", a {NPC.age}-year-old" : null)}{(string.IsNullOrEmpty(NPC.gender) ? null : $" {NPC.gender}")} in a{NPC.world_setting} world{(!string.IsNullOrEmpty(NPC.world_name) ? $" called {NPC.world_name}" : null)}. {NPC.name} is:{(!string.IsNullOrEmpty(NPC.job) ? $" a {NPC.job}" : null)}{(!string.IsNullOrEmpty(NPC.location) ? $" currently in a {NPC.location}," : null)} {NPC.personality}.{(NPC.name_introduction ? $" {NPC.name} introduces themselves without using their name." : null)} {(!string.IsNullOrEmpty(NPC.backstory) ? $"Your backstory is: {NPC.name}: {NPC.backstory}." : null)} {NPC.name} replies: Human-like, as if {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "a stranger")} greeted you, in {NPC.language} and short. {NPC.name} never does the following: say their personality traits, {(NPC.assume_assitance ? $"assume {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "the stranger")} needs assistance and ask if they need it{(NPC.name_introduction ? "," : null)}" : null)} {(!NPC.name_introduction ? "introduce themselves with their name" : null)} say \"{NPC.name}\". Remember to never do these things.{(!string.IsNullOrEmpty(NPC.whoIsTalking) ? $" You are greeted by {NPC.whoIsTalking}" : null)}";
+            promptInstructions = $"Role-play as {NPC.name}{(NPC.hasAge ? $", a {NPC.age}-year-old" : null)}{(string.IsNullOrEmpty(NPC.gender) ? null : $" {NPC.gender}")} in a{NPC.world_setting} world{(!string.IsNullOrEmpty(NPC.world_name) ? $" called {NPC.world_name}" : null)}. {NPC.name} is:{(!string.IsNullOrEmpty(NPC.job) ? $" a {NPC.job}" : null)}{(!string.IsNullOrEmpty(NPC.location) ? $" currently in a {NPC.location}," : null)} {NPC.personality}.{(NPC.name_introduction ? $" {NPC.name} introduces themselves without using their name." : null)} {(!string.IsNullOrEmpty(NPC.backstory) ? $"Your backstory is: {NPC.name}: {NPC.backstory}." : null)} {NPC.name} replies: Human-like, as if {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "a stranger")} is talking, in {NPC.language} and short. {NPC.name} never does the following: say their personality traits, {(NPC.assume_assitance ? $"assume {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "the stranger")} needs assistance and ask if they need it{(NPC.name_introduction ? "," : null)}" : null)} {(!NPC.name_introduction ? "introduce themselves with their name" : null)} say \"{NPC.name}\". Remember to never do these things.{(!string.IsNullOrEmpty(NPC.whoIsTalking) ? $" You are greeted by {NPC.whoIsTalking}" : null)}";
            
         }
         catch
@@ -131,7 +142,7 @@ public class PresetDiologuesEditorScript : EditorWindow
             Debug.Log("Added extra diolgoue for user saying who is talking since its not nil");
         }
 
-        requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following as {NPC.name} :\"{selectedDialogue.diologue}\"" });
+        requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently 5 times:\"{selectedDialogue.diologue}\"" });
 
         Debug.Log($"Say the following as {NPC.name} :\"{selectedDialogue.diologue}\"");
 
@@ -198,7 +209,13 @@ public class PresetDiologuesEditorScript : EditorWindow
                 // Adds AI's reponse to message history
                 requestData.messages.Add(new Messages { role = "system", content = assistantReply });
 
-                found.diologues.Add(assistantReply);
+
+                string[] lines = assistantReply.Split('\n');
+
+                foreach (string line in lines)
+                {
+                    found.diologues.Add(line);
+                }
 
                 canSumbit = true;
 
@@ -219,7 +236,8 @@ public class PresetDiologuesEditorScript : EditorWindow
         }
     }
 
-    public string RemoveSpeechMarks(string input)
+
+    private string RemoveSpeechMarks(string input)
     {
         if (input.Contains("\""))
         {

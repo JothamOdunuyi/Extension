@@ -328,17 +328,21 @@ public class GPTNPC_Dialogue : MonoBehaviour
             Debug.LogWarning("usrMsg is null or empty");
         }
 
-        print($"USERMSG: {userMsg}");
+        if (debugging){
+            print($"USERMSG: {userMsg}");
+        }
+       
 
         if (currentChoiceDiologue && !string.IsNullOrEmpty(currentChoiceDiologue.diologue))
         {
             requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following as {NPC.name} :\"{currentChoiceDiologue.diologue}\"" });
-            print($"Told NPC to say: {currentChoiceDiologue.diologue}");
+            if (debugging){
+                print($"Told NPC to say: {currentChoiceDiologue.diologue}");
+            }
         }
         else
         {
             requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following as {NPC.name} :" });
-            print("ADDED extra");
         }
 
         // Convert request data to JSON

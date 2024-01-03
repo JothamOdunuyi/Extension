@@ -1302,6 +1302,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93db03597c19e4d44839393e190788be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  debugging: 0
   NPC: {fileID: 11400000, guid: 5f19a0135c6422d4ba4682218232ae3a, type: 2}
   textField: {fileID: 137853134}
   inputField: {fileID: 1724963444}
@@ -1310,6 +1311,7 @@ MonoBehaviour:
   slider: {fileID: 73528779}
   rootChoiceDiologue: {fileID: 0}
   saveDiologueHistory: 0
+  usePresetDiologue: 0
 --- !u!54 &290801858
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1445,7 +1447,7 @@ GameObject:
   - component: {fileID: 334090873}
   - component: {fileID: 334090876}
   m_Layer: 0
-  m_Name: NPC (1)
+  m_Name: Akon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1561,6 +1563,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93db03597c19e4d44839393e190788be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  debugging: 0
   NPC: {fileID: 11400000, guid: 18f9ad59e7aa9df4480294167d32d17d, type: 2}
   textField: {fileID: 137853134}
   inputField: {fileID: 1724963444}
@@ -1569,6 +1572,7 @@ MonoBehaviour:
   slider: {fileID: 73528779}
   rootChoiceDiologue: {fileID: 11400000, guid: af4a1b7f913139b49b4b1962cbbef076, type: 2}
   saveDiologueHistory: 0
+  usePresetDiologue: 0
 --- !u!136 &334090879
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1865,25 +1869,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 087f79801e70c3c439d4c9d889ef99d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  soundGroups:
-  - groupName: 
-    sounds: []
-  - groupName: 
-    sounds: []
-  - groupName: 
-    sounds:
-    - audioName: 
-      clip: {fileID: 0}
-      type: 0
-      is3D: 0
-    - audioName: 
-      clip: {fileID: 0}
-      type: 0
-      is3D: 0
-  - groupName: 
-    sounds: []
-  - groupName: 
-    sounds: []
 --- !u!1 &420807102
 GameObject:
   m_ObjectHideFlags: 0
@@ -2153,6 +2138,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93db03597c19e4d44839393e190788be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  debugging: 0
   NPC: {fileID: 11400000, guid: 1d3ba5dbedf07b74c9ba4d04e33ecb3f, type: 2}
   textField: {fileID: 137853134}
   inputField: {fileID: 1724963444}
@@ -2161,6 +2147,7 @@ MonoBehaviour:
   slider: {fileID: 73528779}
   rootChoiceDiologue: {fileID: 0}
   saveDiologueHistory: 0
+  usePresetDiologue: 0
 --- !u!224 &440796243
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2379,7 +2366,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1569066647}
   m_HandleRect: {fileID: 1569066646}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -2556,6 +2543,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93db03597c19e4d44839393e190788be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  debugging: 0
   NPC: {fileID: 11400000, guid: 94b7507b1989b414e938841b5655d3e0, type: 2}
   textField: {fileID: 137853134}
   inputField: {fileID: 1724963444}
@@ -2564,6 +2552,7 @@ MonoBehaviour:
   slider: {fileID: 73528779}
   rootChoiceDiologue: {fileID: 0}
   saveDiologueHistory: 0
+  usePresetDiologue: 0
 --- !u!224 &567740451
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4089,6 +4078,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93db03597c19e4d44839393e190788be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  debugging: 0
   NPC: {fileID: 11400000, guid: 03018adc9c8543b4fb5fb7e0b52462b8, type: 2}
   textField: {fileID: 137853134}
   inputField: {fileID: 1724963444}
@@ -4097,6 +4087,7 @@ MonoBehaviour:
   slider: {fileID: 73528779}
   rootChoiceDiologue: {fileID: 11400000, guid: af4a1b7f913139b49b4b1962cbbef076, type: 2}
   saveDiologueHistory: 0
+  usePresetDiologue: 0
 --- !u!224 &897559158
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4251,6 +4242,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93db03597c19e4d44839393e190788be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  debugging: 1
   NPC: {fileID: 11400000, guid: 7db587012b2440841a960ce3a3420e01, type: 2}
   textField: {fileID: 137853134}
   inputField: {fileID: 1724963444}
@@ -4258,7 +4250,8 @@ MonoBehaviour:
   closeButton: {fileID: 356188614}
   slider: {fileID: 73528779}
   rootChoiceDiologue: {fileID: 11400000, guid: cfe0da5c23fde9442803801e83daecd6, type: 2}
-  saveDiologueHistory: 1
+  saveDiologueHistory: 0
+  usePresetDiologue: 1
 --- !u!4 &912630610
 Transform:
   m_ObjectHideFlags: 0
@@ -5758,6 +5751,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93db03597c19e4d44839393e190788be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  debugging: 0
   NPC: {fileID: 11400000, guid: 86475ab2327705d44958337f4e6bc970, type: 2}
   textField: {fileID: 137853134}
   inputField: {fileID: 1724963444}
@@ -5766,6 +5760,7 @@ MonoBehaviour:
   slider: {fileID: 73528779}
   rootChoiceDiologue: {fileID: 11400000, guid: af4a1b7f913139b49b4b1962cbbef076, type: 2}
   saveDiologueHistory: 0
+  usePresetDiologue: 0
 --- !u!54 &1530050423
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -6227,7 +6222,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 9.935181, y: 124.384766}
+  m_AnchoredPosition: {x: 9.935303, y: 124.384766}
   m_SizeDelta: {x: -1773.0809, y: -1047.0524}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1622126420
@@ -7022,7 +7017,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.00012207031, y: -201}
+  m_AnchoredPosition: {x: -0.00024414062, y: -201}
   m_SizeDelta: {x: -1773.0809, y: -1047.0524}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1774342531
@@ -7257,6 +7252,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93db03597c19e4d44839393e190788be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  debugging: 0
   NPC: {fileID: 11400000, guid: 8a8367d2cad42c1418f65a8eedf96b53, type: 2}
   textField: {fileID: 137853134}
   inputField: {fileID: 1724963444}
@@ -7265,6 +7261,7 @@ MonoBehaviour:
   slider: {fileID: 73528779}
   rootChoiceDiologue: {fileID: 0}
   saveDiologueHistory: 0
+  usePresetDiologue: 0
 --- !u!54 &1831122870
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -7700,6 +7697,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93db03597c19e4d44839393e190788be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  debugging: 0
   NPC: {fileID: 11400000, guid: 4930873cef5eda040b4b6bc6d28ebaf9, type: 2}
   textField: {fileID: 137853134}
   inputField: {fileID: 1724963444}
@@ -7708,6 +7706,7 @@ MonoBehaviour:
   slider: {fileID: 73528779}
   rootChoiceDiologue: {fileID: 11400000, guid: af4a1b7f913139b49b4b1962cbbef076, type: 2}
   saveDiologueHistory: 0
+  usePresetDiologue: 0
 --- !u!4 &1890231978
 Transform:
   m_ObjectHideFlags: 0
