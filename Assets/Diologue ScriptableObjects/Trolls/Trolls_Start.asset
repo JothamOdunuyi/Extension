@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f5a9552c41508849b13695431ac9eb6, type: 3}
+  m_Name: Trolls_Start
+  m_EditorClassIdentifier: 
+  parentPort: {fileID: 11400000, guid: da7840a924298a948b101a9dd40ae467, type: 2}
+  diologue: Quickly, before the trolls arrive!
+  choice1Port: {fileID: 11400000, guid: 1311b7ca8c6ece34bb9b12a059ccba46, type: 2}
+  choice1: W-what's going on?
+  choice2Port: {fileID: 11400000, guid: 1311b7ca8c6ece34bb9b12a059ccba46, type: 2}
+  choice2: Where am I?
+  choice3Port: {fileID: 0}
+  choice3: 

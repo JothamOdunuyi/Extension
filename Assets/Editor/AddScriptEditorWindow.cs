@@ -24,7 +24,7 @@ public class AddScriptEditorWindow : EditorWindow
     public string prompt = "";
 
     // Please don't request too much, but have fun! And obviously do not share this key
-    public const string apiKey = "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";
+    public const string apiKey = "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";//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
 
     private string assistancePrompt2 = " and make sure the code uses the correct namespaces"; 
     private string assistancePrompt = $"Only respond with Unity C# code, code must make a class with unique name and inherit from MonoBehaviour or EditorWindow ";

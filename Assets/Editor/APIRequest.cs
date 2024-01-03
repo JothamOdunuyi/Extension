@@ -22,7 +22,7 @@ using UnityEditor.UIElements;
 public class APIRequest : EditorWindow
 {
     // Please don't request too much, but have fun! And obviously do not share this key
-    private string apiKey = "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";
+    private string apiKey = "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";
     private string gpt3Endpoint = "https://api.openai.com/v1/chat/completions";
 
     //Globals
