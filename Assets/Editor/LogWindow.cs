@@ -16,14 +16,14 @@ public class LogWindow : EditorWindow
 
     public void LogError(string message)
     {
-        logText += "<color=red>Error: " + message + "</color>\n";
+        logText += "<color=red>" + message + "</color>\n";
         Repaint();
         ShowWindow();
     }
 
     public void LogWarning(string message)
     {
-        logText += "<color=yellow>Warning: " + message + "</color>\n";
+        logText += "<color=yellow>" + message + "</color>\n";
         Repaint();
         ShowWindow();
     }
