@@ -31,14 +31,16 @@ public class PresetDiologuesEditorScript : EditorWindow
     // This value is due to Loading data only ever being 0, 0.5 or 1
     private float fakeProgress = 0f;
 
-    private LogWindow logWindow;
+    private bool generateForAllConnectedDiologues = false;
+
+    private List<GPT_NPC_PresetDiologues> foundDiologuesToGenerateInto;
 
     [MenuItem("Open AI/Preset Diologue Generator")]
     public static void ShowWindow()
     {
         PresetDiologuesEditorScript window = GetWindow<PresetDiologuesEditorScript>("Preset Diologue Generator");
         window.minSize = new Vector2(400, 300);
-        window.maxSize = new Vector2(400, 300);
+        window.maxSize = new Vector2(800, 800);
     }
 
     private void OnGUI()
@@ -86,12 +88,15 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         GUILayout.Space(10);
 
+        generateForAllConnectedDiologues = EditorGUILayout.Toggle("Generate for connected Diologues", generateForAllConnectedDiologues);
+
+        GUILayout.Space(10);
+
 
         if (GUILayout.Button("Press Me"))
         {
-            logWindow = GetWindow<LogWindow>("Log Window");
-            if (selectedDialogue == null) { logWindow.LogError("Please select a Diologue (GPT_NPC_PresetDiologues)"); return; }
-            if (gptNpc == null) { logWindow.LogError("Please select a NPC (GPT_NPC)"); return; }
+            if (selectedDialogue == null) {GetWindow<LogWindow>("Log Window").LogError("Please select a Diologue (GPT_NPC_PresetDiologues)"); return; }
+            if (gptNpc == null) { GetWindow<LogWindow>("Log Window").LogError("Please select a NPC (GPT_NPC)"); return; }
 
             if (requestData.messages != null)
             {
@@ -105,11 +110,11 @@ public class PresetDiologuesEditorScript : EditorWindow
 
             found = null;
 
-            foreach (GPT_NPC_PresetDiologues item in selectedDialogue.presetDiologues)
+            foreach (GPT_NPC_PresetDiologues preset in selectedDialogue.presetDiologues)
             {
-                if (item.NPC == gptNpc)
+                if (preset.NPC == gptNpc)
                 {
-                    found = item;
+                    found = preset;
                 }
             }
 
@@ -124,6 +129,16 @@ public class PresetDiologuesEditorScript : EditorWindow
             //found.diologues.Add("NEW THING POG");
 
             SetNPCData();
+            if (generateForAllConnectedDiologues)
+            {
+                foundDiologuesToGenerateInto = new List<GPT_NPC_PresetDiologues>();
+                GenerateForConnectedDiologues(selectedDialogue);
+            }
+            else
+            {
+                AddAssitantMessageToSayPrompt(selectedDialogue);
+            }
+           
             Request();
 
 
@@ -140,6 +155,56 @@ public class PresetDiologuesEditorScript : EditorWindow
         // Simulate loading progress
 
 
+    }
+
+    // This will add a assitant message telling GPT to say the prompt for all connected diologues
+    void GenerateForConnectedDiologues(GPTNPC_ScriptableDiologue currentDiologue)
+    {
+        AddAssitantMessageToSayPrompt(currentDiologue);
+
+
+        found = null;
+
+        foreach (GPT_NPC_PresetDiologues preset in selectedDialogue.presetDiologues)
+        {
+            if (preset.NPC == gptNpc)
+            {
+                found = preset;
+            }
+        }
+
+        // Add a new element to the list
+        if (found == null)
+        {
+            selectedDialogue.presetDiologues.Add(new GPT_NPC_PresetDiologues { NPC = gptNpc, diologues = new List<string>() });
+            found = selectedDialogue.presetDiologues[selectedDialogue.presetDiologues.Count - 1];
+        }
+
+        foundDiologuesToGenerateInto.Add(found);
+
+        Debug.Log($"Added Message for \"{currentDiologue.name}\"");
+
+        if (currentDiologue.choice1Port != null)
+        {
+            GenerateForConnectedDiologues(currentDiologue.choice1Port);
+        }
+
+        if (currentDiologue.choice2Port != null)
+        {
+            GenerateForConnectedDiologues(currentDiologue.choice2Port);
+        }
+
+        if (currentDiologue.choice3Port != null)
+        {
+            GenerateForConnectedDiologues(currentDiologue.choice3Port);
+        }
+
+    }
+
+    void AddAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
+    {
+        requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
+        Debug.Log($"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
     }
 
     void SetNPCData()
@@ -168,7 +233,6 @@ public class PresetDiologuesEditorScript : EditorWindow
             requestData.messages.Add(new Messages { role = "user", content = $"I am {NPC.whoIsTalking}" });
         }
 
-        requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{selectedDialogue.diologue}\"" });
 
         //Debug.Log($"Say the following as {NPC.name} :\"{selectedDialogue.diologue}\"");
 
@@ -233,7 +297,7 @@ public class PresetDiologuesEditorScript : EditorWindow
                 return;
             }
 
-            EditorUtility.DisplayProgressBar("Complete", "Progress: 100% ", 100);
+            EditorUtility.DisplayProgressBar("Completed API Request", "Progress: 100% ", 100);
 
             if (www.result == UnityWebRequest.Result.Success)
             {
@@ -246,12 +310,41 @@ public class PresetDiologuesEditorScript : EditorWindow
                 // Adds AI's reponse to message history
                 requestData.messages.Add(new Messages { role = "system", content = assistantReply });
 
-
-                string[] lines = assistantReply.Split('\n');
-
-                foreach (string line in lines)
+                // Add Loading here too
+                if (generateForAllConnectedDiologues)
                 {
-                    found.diologues.Add(line);
+                    Debug.Log(assistantReply);
+
+                    string[] lines = assistantReply.Split('\n');
+
+                    int tempAmount = promptAmount;
+                    int indexToAddTo = 0;
+                    int i = 0; // used as the actual index
+
+                    // Could just do it for total legnth in lines
+                    for (int j = 0; j < promptAmount * foundDiologuesToGenerateInto.Count; j++)
+                    {
+                        i += 1;
+                        foundDiologuesToGenerateInto[indexToAddTo].diologues.Add(lines[j]);
+                        Debug.Log($"Added : {lines[j]} to {foundDiologuesToGenerateInto[indexToAddTo].NPC.name}");
+                        if(i == promptAmount)
+                        {
+                            i = 0;
+                            indexToAddTo += 1;
+                            Debug.Log($"Reset i, now adding to line {indexToAddTo}");
+                        }
+                    }
+
+                }
+                else
+                {
+                    string[] lines = assistantReply.Split('\n');
+
+                    foreach (string line in lines)
+                    {
+                        found.diologues.Add(line);
+                    }
+
                 }
 
                 canSumbit = true;
@@ -262,7 +355,12 @@ public class PresetDiologuesEditorScript : EditorWindow
             else
             {
                 Debug.LogWarning(www.error);
-                //logWindow.LogError(www.error);
+                Debug.Log(requestData.messages.Count);
+                foreach (var item in requestData.messages)
+                {
+                    Debug.Log(item);
+                }
+                GetWindow<LogWindow>("Log Window").LogError(www.error);
             }
 
             // Remove from delegate
@@ -271,7 +369,7 @@ public class PresetDiologuesEditorScript : EditorWindow
         else
         {
             EditorApplication.update -= WaitForRequest;
-            //logWindow.LogWarning("You are already in the middle of requesting");
+            GetWindow<LogWindow>("Log Window").LogWarning("You are already in the middle of requesting");
         }
 
         // Close loading bar

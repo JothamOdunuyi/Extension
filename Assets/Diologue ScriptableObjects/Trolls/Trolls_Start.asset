@@ -14,51 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parentPort: {fileID: 11400000, guid: da7840a924298a948b101a9dd40ae467, type: 2}
   diologue: Quickly, before the trolls arrive!
-  presetDiologues:
-  - NPC: {fileID: 11400000, guid: 18f9ad59e7aa9df4480294167d32d17d, type: 2}
-    diologues:
-    - Quickly, before the trolls arrive!
-    - Stranger, quickly! Before the trolls arrive!
-  - NPC: {fileID: 11400000, guid: 4930873cef5eda040b4b6bc6d28ebaf9, type: 2}
-    diologues:
-    - Hurry, before the trolls come!
-    - Make haste, for the trolls draw near!
-    - Time is of the essence, the trolls approach!
-    - Swiftly, before the trolls arrive!
-    - Without delay, the trolls are coming!
-    - Speed is crucial, the trolls are approaching!
-    - Don't waste time, the trolls are nearing!
-    - We must be quick, the trolls are closing in!
-    - Before the trolls get here, let's move fast!
-    - No time to waste, the trolls are almost here!
-    - Hurry up, before those trolls show up!
-    - Hurry up, the trolls are coming!
-  - NPC: {fileID: 11400000, guid: 7db587012b2440841a960ce3a3420e01, type: 2}
-    diologues:
-    - Hurry, before the trolls come!
-    - Hasten, ere the trolls approach!
-    - Swiftly, ere the trolls appear!
-    - Speed up, before the trolls arrive!
-    - Make haste, before the trolls show up!
-    - Be quick, ere the trolls come!
-    - Move fast, before the trolls arrive!
-    - Rush, before the trolls appear!
-    - Come on, we must hurry! The trolls will be here soon!
-    - Hurry up, the trolls are on their way!
-    - Hurry, we must move fast before the trolls come!
-    - Hurry, the trolls are approaching!
-    - Hurry up, we must move before the trolls come!
-    - Hurry, lest the trolls descend upon us!
-    - Hurry, we mustn't waste any time!
-    - Hurry, there's no time to waste! The trolls are on their way!
-    - Hurry up, we must act before the trolls arrive!
-    - Hurry up, we mustn't tarry, or the trolls will catch us!
-    - There's no time to waste, the trolls are coming!
-    - Let's make haste, the trolls will be upon us soon!
+  presetDiologues: []
   reset_presetDiologuesDictonary: 1
   choice1Port: {fileID: 11400000, guid: 1311b7ca8c6ece34bb9b12a059ccba46, type: 2}
   choice1: W-what's going on?
-  choice2Port: {fileID: 11400000, guid: 1311b7ca8c6ece34bb9b12a059ccba46, type: 2}
+  choice2Port: {fileID: 0}
   choice2: Where am I?
   choice3Port: {fileID: 0}
   choice3: 
