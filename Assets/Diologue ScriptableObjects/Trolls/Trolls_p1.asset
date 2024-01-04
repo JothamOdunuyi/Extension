@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parentPort: {fileID: 11400000, guid: af4a1b7f913139b49b4b1962cbbef076, type: 2}
   diologue: Not the time nor place for questions! Hide!
-  presetDiologues: []
+  presetDiologues:
+  - NPC: {fileID: 11400000, guid: 7db587012b2440841a960ce3a3420e01, type: 2}
+    diologues: []
   reset_presetDiologuesDictonary: 0
   choice1Port: {fileID: 0}
   choice1: Okay!

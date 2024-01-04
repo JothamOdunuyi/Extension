@@ -33,6 +33,7 @@ public class PresetDiologuesEditorScript : EditorWindow
 
     private bool generateForAllConnectedDiologues = false;
 
+    private int attempts = 0;
     private List<GPT_NPC_PresetDiologues> foundDiologuesToGenerateInto;
 
     [MenuItem("Open AI/Preset Diologue Generator")]
@@ -97,6 +98,7 @@ public class PresetDiologuesEditorScript : EditorWindow
         {
             if (selectedDialogue == null) {GetWindow<LogWindow>("Log Window").LogError("Please select a Diologue (GPT_NPC_PresetDiologues)"); return; }
             if (gptNpc == null) { GetWindow<LogWindow>("Log Window").LogError("Please select a NPC (GPT_NPC)"); return; }
+            attempts = 0;
 
             if (requestData.messages != null)
             {
@@ -132,7 +134,12 @@ public class PresetDiologuesEditorScript : EditorWindow
             if (generateForAllConnectedDiologues)
             {
                 foundDiologuesToGenerateInto = new List<GPT_NPC_PresetDiologues>();
+                //requestData.messages.Add(new Messages { role = "assistant", content = $"Please provide variations for the following sentences {promptAmount} time(s)"});
+                requestData.messages.Add(new Messages { role = "assistant", content = $"You will now be given a few sentences in speech marks. Say them in character. Say the same amount of sentences provided." });
+
                 GenerateForConnectedDiologues(selectedDialogue);
+                //requestData.messages.Add(new Messages { role = "assistant", content = $"Tell me how many sentences you should be saying" });
+
             }
             else
             {
@@ -160,12 +167,11 @@ public class PresetDiologuesEditorScript : EditorWindow
     // This will add a assitant message telling GPT to say the prompt for all connected diologues
     void GenerateForConnectedDiologues(GPTNPC_ScriptableDiologue currentDiologue)
     {
-        AddAssitantMessageToSayPrompt(currentDiologue);
-
+        AddForMutlipleAssitantMessageToSayPrompt(currentDiologue);
 
         found = null;
 
-        foreach (GPT_NPC_PresetDiologues preset in selectedDialogue.presetDiologues)
+        foreach (GPT_NPC_PresetDiologues preset in currentDiologue.presetDiologues)
         {
             if (preset.NPC == gptNpc)
             {
@@ -176,13 +182,13 @@ public class PresetDiologuesEditorScript : EditorWindow
         // Add a new element to the list
         if (found == null)
         {
-            selectedDialogue.presetDiologues.Add(new GPT_NPC_PresetDiologues { NPC = gptNpc, diologues = new List<string>() });
-            found = selectedDialogue.presetDiologues[selectedDialogue.presetDiologues.Count - 1];
+            currentDiologue.presetDiologues.Add(new GPT_NPC_PresetDiologues { NPC = gptNpc, diologues = new List<string>() });
+            found = currentDiologue.presetDiologues[currentDiologue.presetDiologues.Count - 1];
         }
 
-        foundDiologuesToGenerateInto.Add(found);
+       // Debug.Log($"Added Message for \"{currentDiologue.name}\" to count {currentDiologue.presetDiologues.Count - 1}");
 
-        Debug.Log($"Added Message for \"{currentDiologue.name}\"");
+        foundDiologuesToGenerateInto.Add(found);
 
         if (currentDiologue.choice1Port != null)
         {
@@ -201,6 +207,13 @@ public class PresetDiologuesEditorScript : EditorWindow
 
     }
 
+
+    void AddForMutlipleAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
+    {
+        requestData.messages.Add(new Messages { role = "assistant", content = $"Say: \"{sentDiologue.diologue}\"" });
+        Debug.Log($"\"{sentDiologue.diologue}\"");
+        //Debug.Log($"Please provide variations for the following sentences: {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
+    }
     void AddAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
     {
         requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
@@ -251,6 +264,8 @@ public class PresetDiologuesEditorScript : EditorWindow
         // Convert request data to JSON
         string json = JsonUtility.ToJson(requestData);
 
+        Debug.Log(json);
+
         // Create UnityWebRequest (Same as putting "POST" at the end
         www = new UnityWebRequest(gpt3Endpoint, UnityWebRequest.kHttpVerbPOST);
         www.SetRequestHeader("Authorization", "Bearer " + apiKey);
@@ -266,6 +281,8 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         Debug.Log("Now waiting");
         www.SendWebRequest();
+
+
 
         fakeProgress = 0f;
         // Due to now Update() we use a delegate
@@ -301,8 +318,13 @@ public class PresetDiologuesEditorScript : EditorWindow
 
             if (www.result == UnityWebRequest.Result.Success)
             {
+
+                // Remove from delegate
+                EditorApplication.update -= WaitForRequest;
+
                 // Convert data
                 ResponseData responseData = JsonUtility.FromJson<ResponseData>(www.downloadHandler.text);
+
 
                 Choices systemMessage = responseData.choices[0];
                 string assistantReply = RemoveSpeechMarks(systemMessage.message.content);
@@ -310,34 +332,55 @@ public class PresetDiologuesEditorScript : EditorWindow
                 // Adds AI's reponse to message history
                 requestData.messages.Add(new Messages { role = "system", content = assistantReply });
 
+                //foreach (var item in requestData.messages)
+                //{
+                //    Debug.Log($"Role: {item.role} Content: {item.content}");
+                //}
                 // Add Loading here too
+                Debug.Log(assistantReply);
                 if (generateForAllConnectedDiologues)
                 {
-                    Debug.Log(assistantReply);
 
-                    string[] lines = assistantReply.Split('\n');
 
                     int tempAmount = promptAmount;
+                    //Debug.Log("Len: " +lines.Length);
                     int indexToAddTo = 0;
                     int i = 0; // used as the actual index
 
+
+                    string[] lines = assistantReply.Split('\n');
+
+                    //foreach (string line in lines)
+                    //{
+                    //    Debug.Log(line);
+                    //}
+
                     // Could just do it for total legnth in lines
-                    for (int j = 0; j < promptAmount * foundDiologuesToGenerateInto.Count; j++)
-                    {
-                        i += 1;
-                        foundDiologuesToGenerateInto[indexToAddTo].diologues.Add(lines[j]);
-                        Debug.Log($"Added : {lines[j]} to {foundDiologuesToGenerateInto[indexToAddTo].NPC.name}");
-                        if(i == promptAmount)
-                        {
-                            i = 0;
-                            indexToAddTo += 1;
-                            Debug.Log($"Reset i, now adding to line {indexToAddTo}");
-                        }
-                    }
+                    //foreach(string line in lines)
+                    //{
+                    //    if (string.IsNullOrEmpty(line)) { Debug.Log("Broke loop cos empty line"); break; }
+                    //    attempts += 1;
+                    //i += 1;
+                    //if(attempts > 5)
+                    //{
+                    //    EditorUtility.ClearProgressBar();
+                    //    EditorApplication.update -= WaitForRequest;
+                    //}
+                    //foundDiologuesToGenerateInto[indexToAddTo].diologues.Add(line);//
+                    //foundDiologuesToGenerateInto[i].diologues.Add(line);//
+                    //Debug.Log($"Added : {line} to {foundDiologuesToGenerateInto[indexToAddTo].NPC.name}");
+                    //if(i == tempAmount)
+                    //{
+                    //    i = 0;
+                    //    indexToAddTo += 1;
+                    //    Debug.Log($"Reset i, now adding to line {indexToAddTo}");
+                    //}
+                    //}
 
                 }
                 else
                 {
+                    Debug.Log("IN ELSE STATEMENT");
                     string[] lines = assistantReply.Split('\n');
 
                     foreach (string line in lines)
@@ -354,17 +397,20 @@ public class PresetDiologuesEditorScript : EditorWindow
             }
             else
             {
+
+                // Remove from delegate
+                EditorApplication.update -= WaitForRequest;
+
                 Debug.LogWarning(www.error);
                 Debug.Log(requestData.messages.Count);
                 foreach (var item in requestData.messages)
                 {
-                    Debug.Log(item);
+                    Debug.Log($"Role: {item.role} Content: {item.content}");
                 }
                 GetWindow<LogWindow>("Log Window").LogError(www.error);
             }
 
-            // Remove from delegate
-            EditorApplication.update -= WaitForRequest;
+          
         }
         else
         {
