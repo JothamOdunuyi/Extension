@@ -6,6 +6,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 
 public class PresetDiologuesEditorScript : EditorWindow
 {
@@ -22,6 +23,14 @@ public class PresetDiologuesEditorScript : EditorWindow
     bool canSumbit = true;
 
     private GPT_NPC_PresetDiologues found = null;
+
+    private int promptAmount = 1;
+    private int maxPromptAmount = 10;
+
+    private float progress = 0f;
+
+    // This value is due to Loading data only ever being 0, 0.5 or 1
+    private float fakeProgress = 0f;
 
     [MenuItem("Open AI/Preset Diologue Generator")]
     public static void ShowWindow()
@@ -67,12 +76,21 @@ public class PresetDiologuesEditorScript : EditorWindow
         }
 
         GUILayout.Space(10);
+        // Input field for the user to enter a number
+        promptAmount = EditorGUILayout.IntField($"Enter a number (1-{maxPromptAmount}):", promptAmount);
+
+        promptAmount = Mathf.Clamp(promptAmount, 1, maxPromptAmount);
+        
+        GUILayout.Space(10);
 
 
         if (GUILayout.Button("Press Me"))
         {
-            //Debug.Log("Button pressed!");
-            if(requestData.messages != null) { 
+            //LogWindow logWindow = EditorWindow.GetWindow<LogWindow>("Log Window");
+            //if (selectedDialogue == null) { logWindow.LogError("Please select a Diologue (GPT_NPC_PresetDiologues)"); return; }
+            //if (gptNpc == null) { logWindow.LogError("Please select a NPC (GPT_NPC)"); return; }
+
+            if (requestData.messages != null) { 
                 requestData.messages.Clear(); 
             }
             else {
@@ -101,17 +119,20 @@ public class PresetDiologuesEditorScript : EditorWindow
 
             SetNPCData();
             Request();
-        
+
 
         }
 
         //Object[] selectedObjects = Selection.objects;
-        
+
 
         //foreach (Object selectedObject in selectedObjects)
         //{
         //    Debug.Log("Selected Object: " + selectedObject.name);
         //}
+
+        // Simulate loading progress
+      
 
     }
 
@@ -139,12 +160,11 @@ public class PresetDiologuesEditorScript : EditorWindow
         if (!string.IsNullOrEmpty(NPC.whoIsTalking))
         {
             requestData.messages.Add(new Messages { role = "user", content = $"I am {NPC.whoIsTalking}" });
-            Debug.Log("Added extra diolgoue for user saying who is talking since its not nil");
         }
 
-        requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently 5 times:\"{selectedDialogue.diologue}\"" });
+        requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{selectedDialogue.diologue}\"" });
 
-        Debug.Log($"Say the following as {NPC.name} :\"{selectedDialogue.diologue}\"");
+        //Debug.Log($"Say the following as {NPC.name} :\"{selectedDialogue.diologue}\"");
 
 
     }
@@ -177,6 +197,7 @@ public class PresetDiologuesEditorScript : EditorWindow
         Debug.Log("Now waiting");
         www.SendWebRequest();
 
+        fakeProgress = 0f;
         // Due to now Update() we use a delegate
         EditorApplication.update += WaitForRequest;
     }
@@ -187,16 +208,25 @@ public class PresetDiologuesEditorScript : EditorWindow
         if (!canSumbit)
         {
 
+            // Show Loading Bar
             if (!www.isDone)
             {
-                float progress = Mathf.Clamp01(www.downloadProgress + www.uploadProgress);
-                if (progress > 0)
+                // This value is due to Loading data only ever being 0, 0.5 or 1
+                fakeProgress += 0.005f;
+                progress = Mathf.Clamp01((www.downloadProgress + www.uploadProgress)/2 + fakeProgress);
+
+                if (www.uploadProgress == 0)
                 {
-                    Debug.Log(progress * 100 + "%");
+                    EditorUtility.DisplayProgressBar("Requesting API...", $"Progress: {progress * 100}%", Mathf.Clamp(progress, 0, 90));
+                } else if (www.downloadProgress == 0)
+                {
+                    EditorUtility.DisplayProgressBar("Waiting for API...", $"Progress: {progress * 100}%", Mathf.Clamp(progress, 0, 90));
                 }
 
                 return;
             }
+
+            EditorUtility.DisplayProgressBar("Complete", "Progress: 100% ", 100);
 
             if (www.result == UnityWebRequest.Result.Success)
             {
@@ -224,7 +254,8 @@ public class PresetDiologuesEditorScript : EditorWindow
             }
             else
             {
-                Debug.LogWarning("Error sending request: " + www.error);
+                Debug.LogWarning(www.error);
+                //logWindow.LogError(www.error);
             }
 
             // Remove from delegate
@@ -233,7 +264,11 @@ public class PresetDiologuesEditorScript : EditorWindow
         else
         {
             EditorApplication.update -= WaitForRequest;
+            //logWindow.LogWarning("You are already in the middle of requesting");
         }
+
+        // Close loading bar
+        EditorUtility.ClearProgressBar();
     }
 
 
