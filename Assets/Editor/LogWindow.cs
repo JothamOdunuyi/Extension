@@ -9,12 +9,13 @@ public class LogWindow : EditorWindow
     public static void ShowWindow()
     {
         LogWindow window = GetWindow<LogWindow>("Log Window");
-        window.minSize = new Vector2(200, 100);
-        window.maxSize = new Vector2(200, 100); 
+        window.minSize = new Vector2(400, 100);
+        window.maxSize = new Vector2(400, 100); 
     }
 
     public void LogError(string message)
     {
+        Debug.LogError(message);
         logText += "<color=red>" + message + "</color>\n";
         Repaint();
         ShowWindow();
@@ -22,6 +23,7 @@ public class LogWindow : EditorWindow
 
     public void LogWarning(string message)
     {
+        Debug.LogWarning(message);
         logText += "<color=yellow>" + message + "</color>\n";
         Repaint();
         ShowWindow();
@@ -30,7 +32,7 @@ public class LogWindow : EditorWindow
     private void OnGUI()
     {
         // Display log text with rich text formatting
-        GUILayout.Label(logText, new GUIStyle { richText = true });
+        GUILayout.Label(logText, new GUIStyle { richText = true, wordWrap = true });
 
         // Clear log button
         if (GUILayout.Button("OK"))

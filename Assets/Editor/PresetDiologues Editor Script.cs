@@ -1,3 +1,4 @@
+using Codice.CM.Common.Tree;
 using log4net;
 using NUnit.Framework;
 using System;
@@ -5,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Analytics;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
@@ -36,6 +38,9 @@ public class PresetDiologuesEditorScript : EditorWindow
     private int attempts = 0;
     private List<GPT_NPC_PresetDiologues> foundDiologuesToGenerateInto;
 
+    string newDiologueName = "";
+    string folderName = "";
+
     [MenuItem("Open AI/Preset Diologue Generator")]
     public static void ShowWindow()
     {
@@ -46,17 +51,23 @@ public class PresetDiologuesEditorScript : EditorWindow
 
     private void OnGUI()
     {
-        GUILayout.Label("Hello, this is a custom editor window!");
 
         // Drag and drop area for ScriptableObject
-        GUILayout.Space(10);
         GUILayout.Label("Drag your GPT_NPC ScriptableObject here:");
 
         gptNpc = (GPT_NPC)EditorGUILayout.ObjectField(gptNpc, typeof(GPT_NPC), false);
 
         if (gptNpc != null)
         {
-            GUILayout.Label("You've dragged in a GPT_NPC ScriptableObject!");
+            string npcName = gptNpc.name;
+            string npcGender = gptNpc.gender;
+            string npcDesc = gptNpc.backstory;
+            string npcData = $"Name: {npcName}\nGender: {npcGender}\nDesc: {npcDesc}";
+
+            EditorGUILayout.LabelField(npcData, new GUIStyle(EditorStyles.textArea));//GUILayout.ExpandHeight(true)
+            //GUILayout.Label($"Name: {npcName}");
+            //GUILayout.Label($"Gender: {npcGender}");
+            //GUILayout.Label($"Desc: {npcDesc}");
 
             // Additional information or actions related to the GPT_NPC can be added here
         }
@@ -74,10 +85,16 @@ public class PresetDiologuesEditorScript : EditorWindow
                 Debug.LogError("Invalid selection. Please choose a GPTNPC_ScriptableDiologue instance.");
                 selectedDialogue = null; // Reset the selection if it's not of the correct type
             }
-            else
+            else if(gptNpc != null && selectedDialogue.presetDiologues != null)
             {
-                // Valid selection, you can access the GPTNPC_ScriptableDiologue instance through 'selectedDialogue'
-                //Debug.Log("Selected GPTNPC_ScriptableDiologue: " + selectedDialogue.name);
+                foreach (GPT_NPC_PresetDiologues preset in selectedDialogue.presetDiologues)
+                {
+                    //if(selectedDialogue == null) { break; } // Due to changing the selectedDiologue mid update this is needed
+                    if (preset.NPC == gptNpc)
+                    {
+                        GUILayout.Label($"{gptNpc.name} has {preset.diologues.Count} preset diologue(s).");
+                    }
+                }
             }
         }
 
@@ -93,11 +110,17 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         GUILayout.Space(10);
 
+        newDiologueName = EditorGUILayout.TextField($"Preset Diologue Name", newDiologueName);
+        folderName = EditorGUILayout.TextField($"Folder Name", folderName);
 
-        if (GUILayout.Button("Press Me"))
+        GUILayout.Space(10);
+
+
+        if (GUILayout.Button("Generate Diologue"))
         {
             if (selectedDialogue == null) {GetWindow<LogWindow>("Log Window").LogError("Please select a Diologue (GPT_NPC_PresetDiologues)"); return; }
             if (gptNpc == null) { GetWindow<LogWindow>("Log Window").LogError("Please select a NPC (GPT_NPC)"); return; }
+            if (string.IsNullOrEmpty(selectedDialogue.diologue)) { GetWindow<LogWindow>("Log Window").LogError($"Diologue in \"{selectedDialogue.name}\" (GPT_NPC_PresetDiologues) cannot be empty!"); return; }
             attempts = 0;
             if (requestData.messages != null)
             {
@@ -138,30 +161,55 @@ public class PresetDiologuesEditorScript : EditorWindow
             else
             {
                 AddAssitantMessageToSayPrompt(selectedDialogue);
+                Request();
             }
            
-            Request();
+           
 
 
         }
 
-        //Object[] selectedObjects = Selection.objects;
+        if(GUILayout.Button("Create new Diolgoue"))
+        {
+            string assetPathAndName;
+            string folderPath = string.Empty;
+            GPTNPC_ScriptableDiologue newDiologue = ScriptableObject.CreateInstance<GPTNPC_ScriptableDiologue>();
+
+            if(!string.IsNullOrEmpty(folderName))
+            {
+                AssetDatabase.CreateFolder($"Assets/Diologue ScriptableObjects", folderName);
+                folderPath = $"{folderName}/";
+            }
+
+            // Set the asset path and name
+            assetPathAndName = AssetDatabase.GenerateUniqueAssetPath($"Assets/Diologue ScriptableObjects/{folderPath}{newDiologueName}.asset");
+
+            // Create the ScriptableObject asset
+            AssetDatabase.CreateAsset(newDiologue, assetPathAndName);
+
+            // Save any changes to the asset database
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            selectedDialogue = newDiologue;
+
+            Selection.activeObject = selectedDialogue;
+
+            // Refresh Inspector
+            EditorUtility.SetDirty(selectedDialogue);
 
 
-        //foreach (Object selectedObject in selectedObjects)
-        //{
-        //    Debug.Log("Selected Object: " + selectedObject.name);
-        //}
-
-        // Simulate loading progress
-
+            Debug.Log("Created new Preset Diologue");
+        }
 
     }
 
     // This will add a assitant message telling GPT to say the prompt for all connected diologues
     void GenerateForConnectedDiologues(GPTNPC_ScriptableDiologue currentDiologue)
     {
-        AddForMutlipleAssitantMessageToSayPrompt(currentDiologue);
+        //AddForMutlipleAssitantMessageToSayPrompt(currentDiologue);
+        AddAssitantMessageToSayPrompt(currentDiologue);
+        
 
         found = null;
 
@@ -204,9 +252,10 @@ public class PresetDiologuesEditorScript : EditorWindow
 
     void AddForMutlipleAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
     {
-        requestData.messages.Add(new Messages { role = "assistant", content = $"Please provide variations for the following sentences: {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
+        requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following differently: {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
         Debug.Log($"Please provide variations for the following sentences: {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
     }
+
     void AddAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
     {
         requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
@@ -308,7 +357,7 @@ public class PresetDiologuesEditorScript : EditorWindow
             if (www.result == UnityWebRequest.Result.Success)
             {
 
-
+                EditorUtility.DisplayProgressBar("Adding Diologue...", "Converting Data", 0);
                 // Convert data
                 ResponseData responseData = JsonUtility.FromJson<ResponseData>(www.downloadHandler.text);
 
@@ -318,7 +367,7 @@ public class PresetDiologuesEditorScript : EditorWindow
                 // Adds AI's reponse to message history
                 requestData.messages.Add(new Messages { role = "system", content = assistantReply });
 
-                Debug.Log("HERE pog");
+                EditorUtility.DisplayProgressBar("Adding Diologue...", "Adding Diologue", 50);
 
                 foreach (var item in requestData.messages)
                 {
@@ -388,7 +437,8 @@ public class PresetDiologuesEditorScript : EditorWindow
                 GetWindow<LogWindow>("Log Window").LogError(www.error);
             }
 
-          
+            EditorUtility.DisplayProgressBar("Complete", "", 100);
+
         }
         else
         {

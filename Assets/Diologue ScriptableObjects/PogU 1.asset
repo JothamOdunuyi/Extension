@@ -10,18 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6f5a9552c41508849b13695431ac9eb6, type: 3}
-  m_Name: Trolls_Start
+  m_Name: PogU 1
   m_EditorClassIdentifier: 
-  parentPort: {fileID: 11400000, guid: da7840a924298a948b101a9dd40ae467, type: 2}
-  diologue: Did you hear that?!
-  presetDiologues:
-  - NPC: {fileID: 11400000, guid: 7db587012b2440841a960ce3a3420e01, type: 2}
-    diologues:
-    - 
-  reset_presetDiologuesDictonary: 1
-  choice1Port: {fileID: 11400000, guid: 1311b7ca8c6ece34bb9b12a059ccba46, type: 2}
-  choice1: W-what's going on?
+  parentPort: {fileID: 0}
+  diologue: 
+  presetDiologues: []
+  reset_presetDiologuesDictonary: 0
+  choice1Port: {fileID: 0}
+  choice1: 
   choice2Port: {fileID: 0}
-  choice2: Where am I?
+  choice2: 
   choice3Port: {fileID: 0}
   choice3: 
