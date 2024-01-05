@@ -46,46 +46,109 @@ public class PresetDiologuesEditorScript : EditorWindow
     {
         PresetDiologuesEditorScript window = GetWindow<PresetDiologuesEditorScript>("Preset Diologue Generator");
         window.minSize = new Vector2(400, 300);
-        window.maxSize = new Vector2(800, 800);
+        window.maxSize = new Vector2(800, 555);
     }
 
-    private void OnGUI()
+    void SetActiveObj(UnityEngine.Object obj)
+    {
+        Selection.activeObject = selectedDialogue;
+
+        // Refresh Inspector
+        EditorUtility.SetDirty(selectedDialogue);
+    }
+
+    LogWindow GetLogWindow()
+    {
+        return GetWindow<LogWindow>("Log Window");
+    }
+
+    void NewDiologueGenerationGUI()
     {
 
-        // Drag and drop area for ScriptableObject
-        GUILayout.Label("Drag your GPT_NPC ScriptableObject here:");
+        if (string.IsNullOrEmpty(newDiologueName))
+        {
+            GUILayout.Label("Create new Diolgoue Presets here:");
 
-        gptNpc = (GPT_NPC)EditorGUILayout.ObjectField(gptNpc, typeof(GPT_NPC), false);
+        }
 
+        newDiologueName = EditorGUILayout.TextField($"Preset Diologue Name", newDiologueName);
+
+        if (string.IsNullOrEmpty(folderName))
+        {
+            GUILayout.Label("You can create or re-direct the new diologue in a folder here:");
+        }
+
+        folderName = EditorGUILayout.TextField($"Folder Name", folderName);
+
+     
+        // Additional information or actions related to the GPT_NPC can be added here
+
+        if (GUILayout.Button("Create new Diolgoue"))
+        {
+            if (string.IsNullOrEmpty(newDiologueName)) { GetLogWindow().LogError("Please type a name for your new Diologue"); return; }
+
+            string assetPathAndName;
+            string folderPath = string.Empty;
+            GPTNPC_ScriptableDiologue newDiologue = ScriptableObject.CreateInstance<GPTNPC_ScriptableDiologue>();
+
+            if (!string.IsNullOrEmpty(folderName))
+            {
+                AssetDatabase.CreateFolder($"Assets/Diologue ScriptableObjects", folderName);
+                folderPath = $"{folderName}/";
+            }
+
+            // Set the asset path and name
+            assetPathAndName = AssetDatabase.GenerateUniqueAssetPath($"Assets/Diologue ScriptableObjects/{folderPath}{newDiologueName}.asset");
+
+            // Create the ScriptableObject asset
+            AssetDatabase.CreateAsset(newDiologue, assetPathAndName);
+
+            // Save any changes to the asset database
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            selectedDialogue = newDiologue;
+
+            SetActiveObj(selectedDialogue);
+
+            Debug.Log("Created new Preset Diologue");
+        }
+    }
+
+    void ExtraGPTNPCInfoGUI()
+    {
         if (gptNpc != null)
         {
             string npcName = gptNpc.name;
             string npcGender = gptNpc.gender;
             string npcDesc = gptNpc.backstory;
-            string npcData = $"Name: {npcName}\nGender: {npcGender}\nDesc: {npcDesc}";
 
-            EditorGUILayout.LabelField(npcData, new GUIStyle(EditorStyles.textArea));//GUILayout.ExpandHeight(true)
-            //GUILayout.Label($"Name: {npcName}");
-            //GUILayout.Label($"Gender: {npcGender}");
-            //GUILayout.Label($"Desc: {npcDesc}");
+            string npcData = $"<b>Name:</b> {npcName}\n\n<b>Gender:</b> {npcGender}\n\n<b>Desc:</b> {npcDesc}";
 
-            // Additional information or actions related to the GPT_NPC can be added here
+            EditorGUILayout.LabelField(npcData, new GUIStyle(EditorStyles.textArea) { richText = true});
+      
         }
+    }
+    
+
+    private void OnGUI()
+    {
+        // Drag and drop area for ScriptableObject
+        GUILayout.Label("Drag your GPT_NPC ScriptableObject here:");
+
+        gptNpc = (GPT_NPC)EditorGUILayout.ObjectField(gptNpc, typeof(GPT_NPC), false);
+
+        ExtraGPTNPCInfoGUI();
 
         GUILayout.Space(10);
 
         // Display the ObjectField for selecting a ScriptableObject
-        selectedDialogue = (GPTNPC_ScriptableDiologue)EditorGUILayout.ObjectField("Select GPTNPC_ScriptableDiologue", selectedDialogue, typeof(GPTNPC_ScriptableDiologue), false);
+        selectedDialogue = (GPTNPC_ScriptableDiologue)EditorGUILayout.ObjectField("Select Preset Diologue", selectedDialogue, typeof(GPTNPC_ScriptableDiologue), false);
 
         // Check if the selected object is of the correct type
         if (selectedDialogue != null)
         {
-            if (!(selectedDialogue is GPTNPC_ScriptableDiologue))
-            {
-                Debug.LogError("Invalid selection. Please choose a GPTNPC_ScriptableDiologue instance.");
-                selectedDialogue = null; // Reset the selection if it's not of the correct type
-            }
-            else if(gptNpc != null && selectedDialogue.presetDiologues != null)
+            if(gptNpc != null && selectedDialogue.presetDiologues != null)
             {
                 foreach (GPT_NPC_PresetDiologues preset in selectedDialogue.presetDiologues)
                 {
@@ -99,28 +162,32 @@ public class PresetDiologuesEditorScript : EditorWindow
         }
 
         GUILayout.Space(10);
+
+        NewDiologueGenerationGUI();
+
+        GUILayout.Space(10);
         // Input field for the user to enter a number
+        GUILayout.Label("Choose how many prompts you wanted generated here:");
         promptAmount = EditorGUILayout.IntField($"Enter a number (1-{maxPromptAmount}):", promptAmount);
 
         promptAmount = Mathf.Clamp(promptAmount, 1, maxPromptAmount);
 
         GUILayout.Space(10);
 
-        generateForAllConnectedDiologues = EditorGUILayout.Toggle("Generate for connected Diologues", generateForAllConnectedDiologues);
+        generateForAllConnectedDiologues = EditorGUILayout.Toggle("Generate for ALL Diologue", generateForAllConnectedDiologues);
 
         GUILayout.Space(10);
 
-        newDiologueName = EditorGUILayout.TextField($"Preset Diologue Name", newDiologueName);
-        folderName = EditorGUILayout.TextField($"Folder Name", folderName);
+      
 
         GUILayout.Space(10);
 
 
         if (GUILayout.Button("Generate Diologue"))
         {
-            if (selectedDialogue == null) {GetWindow<LogWindow>("Log Window").LogError("Please select a Diologue (GPT_NPC_PresetDiologues)"); return; }
-            if (gptNpc == null) { GetWindow<LogWindow>("Log Window").LogError("Please select a NPC (GPT_NPC)"); return; }
-            if (string.IsNullOrEmpty(selectedDialogue.diologue)) { GetWindow<LogWindow>("Log Window").LogError($"Diologue in \"{selectedDialogue.name}\" (GPT_NPC_PresetDiologues) cannot be empty!"); return; }
+            if (selectedDialogue == null) {GetLogWindow().LogError("Please select a Diologue (GPT_NPC_PresetDiologues)"); return; }
+            if (gptNpc == null) { GetLogWindow().LogError("Please select a NPC (GPT_NPC)"); return; }
+            if (string.IsNullOrEmpty(selectedDialogue.diologue)) { GetLogWindow().LogError($"Diologue in \"{selectedDialogue.name}\" (GPT_NPC_PresetDiologues) cannot be empty!"); return; }
             attempts = 0;
             if (requestData.messages != null)
             {
@@ -169,38 +236,7 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         }
 
-        if(GUILayout.Button("Create new Diolgoue"))
-        {
-            string assetPathAndName;
-            string folderPath = string.Empty;
-            GPTNPC_ScriptableDiologue newDiologue = ScriptableObject.CreateInstance<GPTNPC_ScriptableDiologue>();
-
-            if(!string.IsNullOrEmpty(folderName))
-            {
-                AssetDatabase.CreateFolder($"Assets/Diologue ScriptableObjects", folderName);
-                folderPath = $"{folderName}/";
-            }
-
-            // Set the asset path and name
-            assetPathAndName = AssetDatabase.GenerateUniqueAssetPath($"Assets/Diologue ScriptableObjects/{folderPath}{newDiologueName}.asset");
-
-            // Create the ScriptableObject asset
-            AssetDatabase.CreateAsset(newDiologue, assetPathAndName);
-
-            // Save any changes to the asset database
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            selectedDialogue = newDiologue;
-
-            Selection.activeObject = selectedDialogue;
-
-            // Refresh Inspector
-            EditorUtility.SetDirty(selectedDialogue);
-
-
-            Debug.Log("Created new Preset Diologue");
-        }
+      
 
     }
 
@@ -434,7 +470,7 @@ public class PresetDiologuesEditorScript : EditorWindow
                 {
                     Debug.Log($"Role: {item.role} Content: {item.content}");
                 }
-                GetWindow<LogWindow>("Log Window").LogError(www.error);
+                GetLogWindow().LogError(www.error);
             }
 
             EditorUtility.DisplayProgressBar("Complete", "", 100);
@@ -443,7 +479,7 @@ public class PresetDiologuesEditorScript : EditorWindow
         else
         {
             EditorApplication.update -= WaitForRequest;
-            GetWindow<LogWindow>("Log Window").LogWarning("You are already in the middle of requesting");
+            GetLogWindow().LogWarning("You are already in the middle of requesting");
         }
 
         // Close loading bar
