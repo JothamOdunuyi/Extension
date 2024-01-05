@@ -151,9 +151,9 @@ public class PresetDiologuesEditorScript : EditorWindow
             string npcName = gptNpc.name;
             string npcGender = gptNpc.gender;
             string npcPersonality = gptNpc.personality;
-            string npcDesc = gptNpc.backstory;
+            string npcBackstory = gptNpc.backstory;
 
-            string npcData = $"<b>Name:</b> {npcName}\n\n<b>Gender:</b> {npcGender}\n\n<b>Personality:</b> {npcPersonality}\n\n<b>Desc:</b> {npcDesc}";
+            string npcData = $"<b>Name:</b> {npcName}\n\n<b>Gender:</b> {npcGender}\n\n<b>Personality:</b> {npcPersonality}\n\n<b>Backstory:</b> {npcBackstory}";
 
             EditorGUILayout.LabelField(npcData, new GUIStyle(EditorStyles.textArea) { richText = true});
       
