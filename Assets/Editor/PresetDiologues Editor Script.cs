@@ -43,7 +43,7 @@ public class PresetDiologuesEditorScript : EditorWindow
     private bool findingDiologueToGenerateInto = false;
     private bool generateTickCalledRequest = false;
     private bool generateTickBusy = false;
-    private int GTi = 0; // Generate Tick Index
+    private int GTi = -1; // Generate Tick Index
     private float generateTickLoadPreviousTime; //used to create a DeltaTime
     private float generateTickLoadProgress;
 
@@ -192,6 +192,7 @@ public class PresetDiologuesEditorScript : EditorWindow
                 foundDiologuesToGenerateInto = new List<GPTNPC_ScriptableDiologue>();
                 foundPresetDiologuesToGenerateInto = new List<GPT_NPC_PresetDiologues>();
                 findingDiologueToGenerateInto = false;
+                GTi = -1;
 
                 GenerateForConnectedDiologues(selectedDialogue);
             }
@@ -282,6 +283,8 @@ public class PresetDiologuesEditorScript : EditorWindow
         foundDiologuesToGenerateInto.Add(currentDiologue);
         foundPresetDiologuesToGenerateInto.Add(found);
 
+        Debug.Log($"Added {currentDiologue.name} to DiologuesToGenerateInto, Added {found.NPC.name}");
+
         if (currentDiologue.choice1Port != null)
         {
             GenerateForConnectedDiologues(currentDiologue.choice1Port);
@@ -299,6 +302,7 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         if (firstThread)
         {
+            Debug.Log("Sending GenerateTick from first thread");
             EditorApplication.update += GenerateTick;
         }
 
@@ -312,7 +316,9 @@ public class PresetDiologuesEditorScript : EditorWindow
         {
             generateTickCalledRequest = true;
             EditorUtility.ClearProgressBar(); // incase GenerateTickLoad has a thread "overlap", this will clear the loading bar
+            GTi += 1; // Has to be here bc this will run BEFORE WaitRequest as it was added earlier to the delegate
             AddAssitantMessageToSayPrompt(foundDiologuesToGenerateInto[GTi]);
+            Debug.Log("Cleared Progress Bar and now requesting");
             Request();
         }
         else
@@ -324,13 +330,13 @@ public class PresetDiologuesEditorScript : EditorWindow
                     generateTickBusy = true; // prevents unwanted repeat due to later threads
                     requestData.messages.RemoveAt(requestData.messages.Count - 1); // remove assitant message for that diologue to replace it later
                     generateTickCalledRequest = false;
-                    GTi += 1;
                     generateTickBusy = false;
                 }
                 else
                 {
                     // Start to wait before next request
                     generateTickBusy = true;
+                    Debug.Log("Will start waiting since error");
                     EditorApplication.update -= GenerateTick;
                     generateTickLoadPreviousTime = (float)EditorApplication.timeSinceStartup;
                     EditorApplication.update += GenerateTickLoad;
@@ -355,6 +361,7 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         if(generateTickLoadProgress >= 10)
         {
+            Debug.Log("Finished waiting, requesting again");
             EditorApplication.update -= GenerateTickLoad;
             generateTickBusy = false;
             generateTickCalledRequest = false;
@@ -372,7 +379,8 @@ public class PresetDiologuesEditorScript : EditorWindow
     void AddAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
     {
         requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
-        Debug.Log($"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
+        //Debug.Log($"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
+        Debug.Log($"Added assitant msg: {sentDiologue.diologue}");
     }
 
     void SetNPCData()
@@ -493,11 +501,12 @@ public class PresetDiologuesEditorScript : EditorWindow
                 // Add Loading here too
                 if (generateForAllConnectedDiologues)
                 {
-                    Debug.Log(assistantReply);
+                    Debug.Log($"GOT REPLY: \"assistantReply\"");
 
                     string[] lines = assistantReply.Split('\n');
 
                     foreach (string line in lines){
+                        Debug.Log($"GTi: {GTi} is {foundDiologuesToGenerateInto[GTi].name} ");
                         foundPresetDiologuesToGenerateInto[GTi].diologues.Add(line);
                     }
 
@@ -540,12 +549,14 @@ public class PresetDiologuesEditorScript : EditorWindow
 
                 // Displays the updated conversation without having to wait for OnGUI
                 //Repaint();
+
+                canSumbit = true;
+
             }
             else
             {
 
                 // Remove from delegate
-                EditorApplication.update -= WaitForRequest;
 
                 Debug.LogWarning(www.error);
                 Debug.Log(requestData.messages.Count);
@@ -560,10 +571,11 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         }
 
+        EditorApplication.update -= WaitForRequest;
         // Close loading bar
         EditorUtility.ClearProgressBar();
+        Debug.Log("Closed WaitForRequest Thread");
 
-        canSumbit = true;
     }
 
 

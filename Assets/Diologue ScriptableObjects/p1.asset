@@ -16,12 +16,7 @@ MonoBehaviour:
   diologue: Thanks a bunch!
   presetDiologues:
   - NPC: {fileID: 11400000, guid: 7db587012b2440841a960ce3a3420e01, type: 2}
-    diologues:
-    - Thanks a bunch!
-    - Thanks a bunch!
-  - NPC: {fileID: 11400000, guid: 18f9ad59e7aa9df4480294167d32d17d, type: 2}
-    diologues:
-    - Thanks a bunch!
+    diologues: []
   reset_presetDiologuesDictonary: 0
   choice1Port: {fileID: 0}
   choice1: 
