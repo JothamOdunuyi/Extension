@@ -538,8 +538,6 @@ public class PresetDiologuesEditorScript : EditorWindow
 
                 }
 
-                canSumbit = true;
-
                 // Displays the updated conversation without having to wait for OnGUI
                 //Repaint();
             }
@@ -556,8 +554,6 @@ public class PresetDiologuesEditorScript : EditorWindow
                     Debug.Log($"Role: {item.role} Content: {item.content}");
                 }
                 GetLogWindow().LogError(www.error);
-
-               // if (!generateForAllConnectedDiologues) { canSumbit = true; }
             }
 
             EditorUtility.DisplayProgressBar("Complete", "", 100);
@@ -566,6 +562,8 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         // Close loading bar
         EditorUtility.ClearProgressBar();
+
+        canSumbit = true;
     }
 
 

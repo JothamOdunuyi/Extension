@@ -16,9 +16,7 @@ MonoBehaviour:
   diologue: Not the time nor place for questions! Hide!
   presetDiologues:
   - NPC: {fileID: 11400000, guid: 7db587012b2440841a960ce3a3420e01, type: 2}
-    diologues:
-    - Questions later! Hide, before it's too late!
-    - Questions later! Hide, before it's too late!
+    diologues: []
   reset_presetDiologuesDictonary: 0
   choice1Port: {fileID: 0}
   choice1: Okay!
