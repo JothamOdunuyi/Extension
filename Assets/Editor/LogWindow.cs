@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
+// Purpose is to better inform the user, since i feel like output won't be enough
 public class LogWindow : EditorWindow
 {
     private string logText = "";
@@ -16,17 +17,15 @@ public class LogWindow : EditorWindow
     public void LogError(string message)
     {
         Debug.LogError(message);
-        logText += "<color=red>" + message + "</color>\n";
+        logText += $"<color=red>{message}</color>\n";
         Repaint();
-        ShowWindow();
     }
 
     public void LogWarning(string message)
     {
         Debug.LogWarning(message);
-        logText += "<color=yellow>" + message + "</color>\n";
+        logText += $"<color=yellow>{message}</color>\n";
         Repaint();
-        ShowWindow();
     }
 
     private void OnGUI()
