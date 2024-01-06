@@ -16,18 +16,19 @@ MonoBehaviour:
   diologue: Did you hear that?!
   presetDiologues:
   - NPC: {fileID: 11400000, guid: 7db587012b2440841a960ce3a3420e01, type: 2}
-    diologues: []
+    diologues:
+    - Did you catch that?
+    - Did you perceive that?
+    - Did you heed that?
+    - Did you detect that?
+    - Did you listen to that?
   - NPC: {fileID: 11400000, guid: 5f19a0135c6422d4ba4682218232ae3a, type: 2}
     diologues:
-    - Oh-... Did you-... hear that?
-    - H-h-Hey, d-did you h-h-hear that?
-  - NPC: {fileID: 11400000, guid: 8a8367d2cad42c1418f65a8eedf96b53, type: 2}
-    diologues:
-    - Yup, did you hear that?!
-    - Oh, did you hear that?!
-    - Hey, did you hear that?!
-    - Wow, did you hear that?!
-    - Hey, did you catch that?!
+    - D-did you hear that?
+    - D-did you- you hear that?
+    - Did you hear that?
+    - D-did you hear that?
+    - D-did you hear that?
   reset_presetDiologuesDictonary: 1
   choice1Port: {fileID: 11400000, guid: 1311b7ca8c6ece34bb9b12a059ccba46, type: 2}
   choice1: W-what's going on?

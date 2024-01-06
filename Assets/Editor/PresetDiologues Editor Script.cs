@@ -186,7 +186,11 @@ public class PresetDiologuesEditorScript : EditorWindow
 
             SetFound(selectedDialogue);
 
+            // Clamp Visually (No gurantee this runs before Generate Button is pressed)
+            promptAmount = Mathf.Clamp(promptAmount, 1, maxPromptAmount);
+
             SetNPCData();
+
             if (generateForAllConnectedDiologues)
             {
                 foundDiologuesToGenerateInto = new List<GPTNPC_ScriptableDiologue>();
@@ -246,10 +250,7 @@ public class PresetDiologuesEditorScript : EditorWindow
         GUILayout.Label("Choose how many prompts you wanted generated here:");
 
 
-        promptAmount = EditorGUILayout.IntField($"Enter a number (1-{maxPromptAmount}):", promptAmount);
-
-        // Clamp Visually (No gurantee this runs before Generate Button is pressed)
-        promptAmount = Mathf.Clamp(promptAmount, 1, maxPromptAmount);
+        promptAmount = EditorGUILayout.IntField($"Enter a number (1-{maxPromptAmount}):", Mathf.Clamp(promptAmount, 1, 5));
 
         MakeSpace();
 
@@ -283,8 +284,6 @@ public class PresetDiologuesEditorScript : EditorWindow
         foundDiologuesToGenerateInto.Add(currentDiologue);
         foundPresetDiologuesToGenerateInto.Add(found);
 
-        Debug.Log($"Added {currentDiologue.name} to DiologuesToGenerateInto, Added {found.NPC.name}");
-
         if (currentDiologue.choice1Port != null)
         {
             GenerateForConnectedDiologues(currentDiologue.choice1Port);
@@ -302,7 +301,6 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         if (firstThread)
         {
-            Debug.Log("Sending GenerateTick from first thread");
             EditorApplication.update += GenerateTick;
         }
 
@@ -317,8 +315,16 @@ public class PresetDiologuesEditorScript : EditorWindow
             generateTickCalledRequest = true;
             EditorUtility.ClearProgressBar(); // incase GenerateTickLoad has a thread "overlap", this will clear the loading bar
             GTi += 1; // Has to be here bc this will run BEFORE WaitRequest as it was added earlier to the delegate
+            
+            // Check if the end has been reached
+            if(GTi > foundDiologuesToGenerateInto.Count - 1) { 
+                EditorApplication.update -= GenerateTick; 
+                GetLogWindow().Log("Generation Complete!");
+                generateTickCalledRequest = false;
+                return; 
+            }
+
             AddAssitantMessageToSayPrompt(foundDiologuesToGenerateInto[GTi]);
-            Debug.Log("Cleared Progress Bar and now requesting");
             Request();
         }
         else
@@ -380,7 +386,7 @@ public class PresetDiologuesEditorScript : EditorWindow
     {
         requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
         //Debug.Log($"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
-        Debug.Log($"Added assitant msg: {sentDiologue.diologue}");
+       // Debug.Log($"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
     }
 
     void SetNPCData()
@@ -498,42 +504,25 @@ public class PresetDiologuesEditorScript : EditorWindow
                 //{
                 //    Debug.Log($"Role: {item.role} Content: {item.content}");
                 //}
-                // Add Loading here too
+               // Add Loading here too
+
                 if (generateForAllConnectedDiologues)
                 {
-                    Debug.Log($"GOT REPLY: \"assistantReply\"");
 
+                    int timesAdded = 0;
                     string[] lines = assistantReply.Split('\n');
 
                     foreach (string line in lines){
-                        Debug.Log($"GTi: {GTi} is {foundDiologuesToGenerateInto[GTi].name} ");
+                        timesAdded += 1;
+                        //Debug.Log($"GTi: {GTi} is {foundDiologuesToGenerateInto[GTi].name} ");
                         foundPresetDiologuesToGenerateInto[GTi].diologues.Add(line);
                     }
 
-                    //int tempAmount = promptAmount;
-                    //int indexToAddTo = 0;
-                    //int i = 0; // used as the actual index
-                 
-                    // Could just do it for total legnth in lines
-                    //foreach(string line in lines)
-                    //{
-                    //    if (string.IsNullOrEmpty(line)) { Debug.Log("Broke loop cos empty line"); break; }
-                    //    attempts += 1;
-                    //    i += 1;
-                    //    if(attempts > 5)
-                    //    {
-                    //        EditorUtility.ClearProgressBar();
-                    //        EditorApplication.update -= WaitForRequest;
-                    //    }
-                    //    foundDiologuesToGenerateInto[indexToAddTo].diologues.Add(line);//
-                    //    Debug.Log($"Added : {line} to {foundDiologuesToGenerateInto[indexToAddTo].NPC.name}");
-                    //    if(i == promptAmount)
-                    //    {
-                    //        i = 0;
-                    //        indexToAddTo += 1;
-                    //        Debug.Log($"Reset i, now adding to line {indexToAddTo}");
-                    //    }
-                    //}
+                    // Log a warning if there weren't as much lines as the user expected
+                    if(timesAdded < promptAmount)
+                    {
+                        GetLogWindow().LogWarning($"For DiologuePreset \"{foundDiologuesToGenerateInto[GTi].name}\" the token count was too high to generate {promptAmount} diologues!\n Considering shortening the diologue or waiting a couple minutes for more tokens.");
+                    }
 
                 }
                 else
@@ -574,7 +563,6 @@ public class PresetDiologuesEditorScript : EditorWindow
         EditorApplication.update -= WaitForRequest;
         // Close loading bar
         EditorUtility.ClearProgressBar();
-        Debug.Log("Closed WaitForRequest Thread");
 
     }
 

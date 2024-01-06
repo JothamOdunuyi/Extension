@@ -14,9 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parentPort: {fileID: 11400000, guid: cfe0da5c23fde9442803801e83daecd6, type: 2}
   diologue: What a shame...
-  presetDiologues:
-  - NPC: {fileID: 11400000, guid: 7db587012b2440841a960ce3a3420e01, type: 2}
-    diologues: []
+  presetDiologues: []
   reset_presetDiologuesDictonary: 0
   choice1Port: {fileID: 0}
   choice1: 

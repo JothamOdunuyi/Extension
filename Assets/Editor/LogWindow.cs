@@ -17,14 +17,21 @@ public class LogWindow : EditorWindow
     public void LogError(string message)
     {
         Debug.LogError(message);
-        logText += $"<color=red>{message}</color>\n";
+        logText += $"\n<color=red>{message}</color>\n";
         Repaint();
     }
 
     public void LogWarning(string message)
     {
         Debug.LogWarning(message);
-        logText += $"<color=yellow>{message}</color>\n";
+        logText += $"\n<color=yellow>{message}</color>\n";
+        Repaint();
+    }
+
+    public void Log(string message)
+    {
+        Debug.Log(message);
+        logText += "\n"+message;
         Repaint();
     }
 
