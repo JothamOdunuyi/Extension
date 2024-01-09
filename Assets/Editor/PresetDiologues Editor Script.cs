@@ -325,6 +325,7 @@ public class PresetDiologuesEditorScript : EditorWindow
                 EditorApplication.update -= GenerateTick; 
                 GetLogWindow().Log("Generation Complete!");
                 generateTickCalledRequest = false;
+                canSumbit = true;
                 return; 
             }
 
