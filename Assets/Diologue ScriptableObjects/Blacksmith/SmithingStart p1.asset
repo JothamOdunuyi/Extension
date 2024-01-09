@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f5a9552c41508849b13695431ac9eb6, type: 3}
   m_Name: SmithingStart p1
   m_EditorClassIdentifier: 
-  parentPort: {fileID: 0}
-  diologue: 
+  parentPort: {fileID: 11400000, guid: c830437661cf3e24da2dd91431a28d29, type: 2}
+  diologue: Because it is the best!
   presetDiologues: []
   reset_presetDiologuesDictonary: 0
   choice1Port: {fileID: 0}

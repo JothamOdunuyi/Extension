@@ -464,6 +464,7 @@ public class PresetDiologuesEditorScript : EditorWindow
         // Reset fake prog
         fakeProgress = 0f;
 
+        Debug.Log("Requested");
         // Due to no Update() or availble use of coroutines, we use a delegate
         EditorApplication.update += WaitForRequest;
     }
@@ -477,7 +478,8 @@ public class PresetDiologuesEditorScript : EditorWindow
             // Show Loading Bar while request is waiting
             if (!www.isDone)
             {
-                // This value is due to Loading data only ever being 0, 0.5 or 1
+                Debug.Log("Not done");
+                // This value is due to? Loading data only ever being 0, 0.5 or 1
                 fakeProgress += 0.005f;
                 progress = Mathf.Clamp01((www.downloadProgress + www.uploadProgress) / 2 + fakeProgress);
 
@@ -494,7 +496,7 @@ public class PresetDiologuesEditorScript : EditorWindow
             }
 
             EditorUtility.DisplayProgressBar("Completed API Request", "Progress: 100% ", 100);
-
+            Debug.Log($"RESULT: {www.result}");
             if (www.result == UnityWebRequest.Result.Success)
             {
 
@@ -507,6 +509,9 @@ public class PresetDiologuesEditorScript : EditorWindow
 
                 EditorUtility.DisplayProgressBar("Adding Diologue...", "Adding Diologue", 50);
 
+                Debug.Log(assistantReply);
+                Debug.Log("GEENRATION: " + generateForAllConnectedDiologues);
+
                 if (generateForAllConnectedDiologues)
                 {
 
@@ -517,6 +522,7 @@ public class PresetDiologuesEditorScript : EditorWindow
                     {
                         timesAdded += 1;
                         //Debug.Log($"GTi: {GTi} is {foundDiologuesToGenerateInto[GTi].name} ");
+                        Debug.Log($"GTi: {GTi}, adding line: {line} \nTO DIOLOGUE: {foundDiologuesToGenerateInto[GTi].diologue}");
                         foundPresetDiologuesToGenerateInto[GTi].diologues.Add(line);
                     }
 
@@ -547,10 +553,10 @@ public class PresetDiologuesEditorScript : EditorWindow
 
                 Debug.LogWarning(www.error);
                 Debug.Log(requestData.messages.Count);
-                foreach (var item in requestData.messages)
-                {
-                    Debug.Log($"Role: {item.role} Content: {item.content}");
-                }
+                //foreach (var item in requestData.messages)
+                //{
+                //    Debug.Log($"Role: {item.role} Content: {item.content}");
+                //}
                 GetLogWindow().LogError(www.error);
             }
 

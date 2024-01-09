@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f5a9552c41508849b13695431ac9eb6, type: 3}
   m_Name: SmithingStart
   m_EditorClassIdentifier: 
-  parentPort: {fileID: 0}
+  parentPort: {fileID: 11400000, guid: da7840a924298a948b101a9dd40ae467, type: 2}
   diologue: I like my hammer!
   presetDiologues: []
   reset_presetDiologuesDictonary: 0
-  choice1Port: {fileID: 0}
+  choice1Port: {fileID: 11400000, guid: 1cddd9bd25e578148bba1526b5f49cfa, type: 2}
   choice1: Why ?
   choice2Port: {fileID: 0}
   choice2: Cool!

@@ -14,7 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parentPort: {fileID: 11400000, guid: da7840a924298a948b101a9dd40ae467, type: 2}
   diologue: What brings you to this place?
-  presetDiologues: []
+  presetDiologues:
+  - NPC: {fileID: 11400000, guid: 18f9ad59e7aa9df4480294167d32d17d, type: 2}
+    diologues:
+    - What has brought you to this place?
+    - What has brought you to this place?
+    - Why have you come to this place?
+    - What brings you here, stranger?
+    - ' What is the reason for your presence in this place?'
+    - Tell me, what has brought you to this particular location?
+  - NPC: {fileID: 11400000, guid: 5f19a0135c6422d4ba4682218232ae3a, type: 2}
+    diologues:
+    - '-Um, w-w-what b-brings you t-t-to th-th-this p-place? '
+    - -Uh, what b-brings you t-to th-th-this p-place?
+    - '-Um, what b-brings you h-here? '
+    - -Uh, what b-brings you t-t-to th-th-this spot?
+    - -Uh, why a-are you h-here?
   reset_presetDiologuesDictonary: 0
   choice1Port: {fileID: 11400000, guid: 032a3594bc5d47e4788c70bf32946c89, type: 2}
   choice1: Are you Suora the lost mage?
