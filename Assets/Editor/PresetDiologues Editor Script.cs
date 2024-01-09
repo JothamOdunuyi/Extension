@@ -1,3 +1,4 @@
+using Codice.Client.BaseCommands;
 using Codice.CM.Common.Tree;
 using log4net;
 using NUnit.Framework;
@@ -184,8 +185,9 @@ public class PresetDiologuesEditorScript : EditorWindow
             else
             {
                 requestData.messages = new List<Messages>();
-                requestData.model = "gpt-3.5-turbo";
             }
+
+            requestData.model = "gpt-3.5-turbo";
 
             SetFound(selectedDialogue);
 
@@ -200,11 +202,15 @@ public class PresetDiologuesEditorScript : EditorWindow
                 attempts = 0;
                 if (generateForAllConnectedDiologues)
                 {
+                    // Rest variables
                     foundDiologuesToGenerateInto = new List<GPTNPC_ScriptableDiologue>();
                     foundPresetDiologuesToGenerateInto = new List<GPT_NPC_PresetDiologues>();
+                    
                     findingDiologueToGenerateInto = false;
-                    GTi = -1;
+                    generateTickCalledRequest = false;
+                    generateTickBusy = false;
 
+                    // Search diologues
                     GenerateForConnectedDiologues(selectedDialogue);
                 }
                 else
@@ -317,6 +323,7 @@ public class PresetDiologuesEditorScript : EditorWindow
         // This will allow the final ran thread (the first) to start the API requests ONLY after all diolgoues has been added to lists
         if (firstThread)
         {
+            Debug.Log($"Found {foundDiologuesToGenerateInto.Count} diologues");
             EditorApplication.update += GenerateTick;
         }
 
@@ -332,9 +339,12 @@ public class PresetDiologuesEditorScript : EditorWindow
             generateTickCalledRequest = true;
             EditorUtility.ClearProgressBar(); // incase GenerateTickLoad has a thread "overlap", this will clear the loading bar
 
-            // Only precede to generate next prompt if the previous was a success
+            // Only procede to generate next prompt if the previous was a success
             if ( www == null || www.result == UnityWebRequest.Result.Success){
                 GTi += 1; // Has to be here bc this will run BEFORE WaitRequest as it was added earlier to the delegate
+                if (GTi < foundDiologuesToGenerateInto.Count - 1){
+                    AddAssitantMessageToSayPrompt(foundDiologuesToGenerateInto[GTi]);// Tells NPC to say line
+                } 
             }
               
             // Check if the end has been reached, and prevent any more quests
@@ -346,11 +356,11 @@ public class PresetDiologuesEditorScript : EditorWindow
                 return; 
             }
 
-            AddAssitantMessageToSayPrompt(foundDiologuesToGenerateInto[GTi]);
             Request();
         }
         else
         {
+            
             // Handles success and error of the sent request
             if(www.isDone && !generateTickBusy) // prevents unwanted repeat due to later threads
             {
@@ -368,7 +378,10 @@ public class PresetDiologuesEditorScript : EditorWindow
                     generateTickBusy = true;
                     Debug.Log("Waiting, since request had an error.");
                     EditorApplication.update -= GenerateTick;
+
+                    generateTickLoadProgress = 0f;
                     generateTickLoadPreviousTime = (float)EditorApplication.timeSinceStartup;
+
                     EditorApplication.update += GenerateTickLoad;
                 }
             } 
@@ -382,13 +395,12 @@ public class PresetDiologuesEditorScript : EditorWindow
         // Calculate deltaTime
         float currentTime = (float)EditorApplication.timeSinceStartup;
         float deltaTime = currentTime - generateTickLoadPreviousTime;
-
         // Update the previous time for the next frame
         generateTickLoadPreviousTime = currentTime;
 
         generateTickLoadProgress += 1 * deltaTime;
 
-        EditorUtility.DisplayProgressBar("Retrying API Request after some waiting...", "", generateTickLoadProgress * 10); // wait time is 10 seconds so we multiple by 10 here
+        EditorUtility.DisplayProgressBar("Retrying API Request after some waiting...", "", (int)generateTickLoadProgress * 10); // wait time is 10 seconds so we multiple by 10 here
 
         // Wait for 10 seconds then attempt to request API agian
         if(generateTickLoadProgress >= 10)
@@ -435,14 +447,12 @@ public class PresetDiologuesEditorScript : EditorWindow
     void AddForMutlipleAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
     {
         requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following differently: {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
-        Debug.Log($"Please provide variations for the following sentences: {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
     }
 
     // Adds what the NPC should say
     void AddAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
     {
         requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
-        Debug.Log($"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{ sentDiologue.diologue}\"");
     }
 
     #endregion
@@ -473,7 +483,6 @@ public class PresetDiologuesEditorScript : EditorWindow
         // Reset fake prog
         fakeProgress = 0f;
 
-        Debug.Log("Requested");
         // Due to no Update() or availble use of coroutines, we use a delegate
         EditorApplication.update += WaitForRequest;
     }
@@ -502,7 +511,6 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         EditorUtility.DisplayProgressBar("Completed API Request", "Progress: 100% ", 100);
         
-        Debug.Log("Outisde of done");
         if (www.result == UnityWebRequest.Result.Success)
         {
 
@@ -515,8 +523,6 @@ public class PresetDiologuesEditorScript : EditorWindow
 
             EditorUtility.DisplayProgressBar("Adding Diologue...", "Adding Diologue", 50);
 
-            Debug.Log(assistantReply);
-            Debug.Log("GEENRATION: " + generateForAllConnectedDiologues);
 
             if (generateForAllConnectedDiologues)
             {
@@ -527,8 +533,7 @@ public class PresetDiologuesEditorScript : EditorWindow
                 foreach (string line in lines)
                 {
                     timesAdded += 1;
-                    //Debug.Log($"GTi: {GTi} is {foundDiologuesToGenerateInto[GTi].name} ");
-                    Debug.Log($"GTi: {GTi}, adding line: {line} \nTO DIOLOGUE: {foundDiologuesToGenerateInto[GTi].diologue}");
+                    //Debug.Log($"GTi: {GTi}, adding line: {line} \nTO DIOLOGUE: {foundDiologuesToGenerateInto[GTi].diologue}");
                     foundPresetDiologuesToGenerateInto[GTi].diologues.Add(line);
                 }
 
@@ -556,28 +561,47 @@ public class PresetDiologuesEditorScript : EditorWindow
         else
         {
             attempts += 1;
-            Debug.LogWarning(www.error);
-            Debug.Log(requestData.messages.Count);
-            foreach (var item in requestData.messages)
+
+            GetLogWindow().LogError(www.error);
+
+            //For testing
+            /*foreach (var item in requestData.messages)
             {
                 Debug.Log($"Role: {item.role} Content: {item.content}");
             }
-            GetLogWindow().LogError(www.error);
+            Debug.LogError("HTTP Status Code: " + www.responseCode);
+            Debug.LogError("Response Text: " + www.downloadHandler.text);*/
 
-            // For safety, it will shutdown everything
-            if(attempts > 2)
+            // This checks if the error tells us to wait (when a big limit was reached) and displays it for the user
+            if (www.responseCode == 429)
             {
-                EditorApplication.update -= WaitForRequest;
-                EditorApplication.update -= GenerateTick;
-                EditorApplication.update -= GenerateTickLoad;
-                EditorUtility.ClearProgressBar();
-                canSumbit = true;
-                GetLogWindow().LogError($"Had to shutdown operation, too many attempts. Total was :{attempts}");
-                //Close();
+                // The following IF statement was from GPT, I do not claim it
+                ErrorResponse errorResponse = JsonUtility.FromJson<ErrorResponse>(www.downloadHandler.text);
+                if (errorResponse != null && errorResponse.error != null)
+                {
+                    string errorMessage = errorResponse.error.message;
+
+                    int startIndex = errorMessage.IndexOf("Please try again in ");
+                    int endIndex = errorMessage.IndexOf(".", startIndex);
+
+                    if (startIndex != -1 && endIndex != -1)
+                    {
+                        string retryMessage = errorMessage.Substring(startIndex, endIndex - startIndex + 1);
+                        GetLogWindow().LogError($"Had to shutdown operation {retryMessage}\n\nThere has been too many requests.");
+                        if (generateForAllConnectedDiologues) { ShutdownRequests(false); return; }
+                    }
+                }
+            }
+          
+            // For safety, it will shutdown everything if there were too many errors
+            if (attempts >= 3)
+            {
+                ShutdownRequests(true);
                 return;
             }
 
         }
+
 
         EditorUtility.DisplayProgressBar("Complete", "", 100);
 
@@ -587,12 +611,27 @@ public class PresetDiologuesEditorScript : EditorWindow
         // Close loading bar
         EditorUtility.ClearProgressBar();
 
+      
         if (!generateForAllConnectedDiologues) { canSumbit = true; }
     }
 
     #endregion
 
     #region Request Helper Functions
+
+    void ShutdownRequests(bool displayErrorMsg)
+    {
+        EditorApplication.update -= WaitForRequest;
+        EditorApplication.update -= GenerateTick;
+        EditorApplication.update -= GenerateTickLoad;
+        EditorUtility.ClearProgressBar();
+        canSumbit = true;
+        if (displayErrorMsg) {
+            GetLogWindow().LogError($"Had to shutdown operation, too many attempts. Total was : {attempts} attempts\n Please try again after a minute");
+        }
+      
+
+    }
 
     private string RemoveSpeechMarks(string input)
     {
@@ -648,6 +687,23 @@ public class PresetDiologuesEditorScript : EditorWindow
         public Messages message;
         public double finish_probability;
     }
+
+    [System.Serializable]
+    public class ErrorResponse
+    {
+        public ErrorInfo error;
+    }
+
+    [System.Serializable]
+    public class ErrorInfo
+    {
+        public string message;
+        public string type;
+        public string param;
+        public string code;
+    }
+
+
 
     #endregion
 }
