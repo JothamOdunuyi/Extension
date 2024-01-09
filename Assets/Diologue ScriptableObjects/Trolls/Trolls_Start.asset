@@ -13,26 +13,12 @@ MonoBehaviour:
   m_Name: Trolls_Start
   m_EditorClassIdentifier: 
   parentPort: {fileID: 11400000, guid: da7840a924298a948b101a9dd40ae467, type: 2}
-  diologue: Did you hear that?!
-  presetDiologues:
-  - NPC: {fileID: 11400000, guid: 7db587012b2440841a960ce3a3420e01, type: 2}
-    diologues:
-    - Did you catch that?
-    - Did you perceive that?
-    - Did you heed that?
-    - Did you detect that?
-    - Did you listen to that?
-  - NPC: {fileID: 11400000, guid: 5f19a0135c6422d4ba4682218232ae3a, type: 2}
-    diologues:
-    - D-did you hear that?
-    - D-did you- you hear that?
-    - Did you hear that?
-    - D-did you hear that?
-    - D-did you hear that?
+  diologue: Did you hear that?! It sounded like a troll...
+  presetDiologues: []
   reset_presetDiologuesDictonary: 1
   choice1Port: {fileID: 11400000, guid: 1311b7ca8c6ece34bb9b12a059ccba46, type: 2}
   choice1: W-what's going on?
-  choice2Port: {fileID: 0}
-  choice2: Where am I?
+  choice2Port: {fileID: 11400000, guid: 1311b7ca8c6ece34bb9b12a059ccba46, type: 2}
+  choice2: How could that be?
   choice3Port: {fileID: 0}
   choice3: 

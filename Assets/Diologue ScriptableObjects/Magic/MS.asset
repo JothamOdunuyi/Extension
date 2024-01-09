@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f5a9552c41508849b13695431ac9eb6, type: 3}
+  m_Name: MS
+  m_EditorClassIdentifier: 
+  parentPort: {fileID: 11400000, guid: da7840a924298a948b101a9dd40ae467, type: 2}
+  diologue: What brings you to this place?
+  presetDiologues: []
+  reset_presetDiologuesDictonary: 0
+  choice1Port: {fileID: 11400000, guid: 032a3594bc5d47e4788c70bf32946c89, type: 2}
+  choice1: Are you Suora the lost mage?
+  choice2Port: {fileID: 11400000, guid: 07a93bd05370d1d41ba22816362b94ac, type: 2}
+  choice2: It's you!
+  choice3Port: {fileID: 0}
+  choice3: 

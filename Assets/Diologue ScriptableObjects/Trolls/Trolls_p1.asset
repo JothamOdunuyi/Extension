@@ -13,21 +13,10 @@ MonoBehaviour:
   m_Name: Trolls_p1
   m_EditorClassIdentifier: 
   parentPort: {fileID: 11400000, guid: af4a1b7f913139b49b4b1962cbbef076, type: 2}
-  diologue: Not the time nor place for questions! Hide!
-  presetDiologues:
-  - NPC: {fileID: 11400000, guid: 7db587012b2440841a960ce3a3420e01, type: 2}
-    diologues:
-    - No time or room for inquiries! Take cover!
-    - This is not the moment or setting for questions! Conceal yourself!
-    - Now is not the time nor the place to ask questions! Seek shelter!
-    - There is neither time nor space for inquiries! Find a hiding spot!
-    - Not the appropriate time nor location for questions! Quick, find cover!
-  - NPC: {fileID: 11400000, guid: 5f19a0135c6422d4ba4682218232ae3a, type: 2}
-    diologues:
-    - Um... s-sorry, but maybe now isn't the best time for questions. W-would you
-      mind hiding?
+  diologue: Not the time nor place for questions! Hide before the trolls find us!
+  presetDiologues: []
   reset_presetDiologuesDictonary: 0
-  choice1Port: {fileID: 0}
+  choice1Port: {fileID: 11400000, guid: bc3671dce9aa7974cb4bd8b2bbb2bec3, type: 2}
   choice1: Okay!
   choice2Port: {fileID: 0}
   choice2: 

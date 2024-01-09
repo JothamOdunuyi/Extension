@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f5a9552c41508849b13695431ac9eb6, type: 3}
+  m_Name: Intro3 p1+p2+p3
+  m_EditorClassIdentifier: 
+  parentPort: {fileID: 11400000, guid: da7840a924298a948b101a9dd40ae467, type: 2}
+  diologue: '[Explain your backstory]'
+  presetDiologues:
+  - NPC: {fileID: 11400000, guid: 1d3ba5dbedf07b74c9ba4d04e33ecb3f, type: 2}
+    diologues:
+    - Child, I have learned to be cautious in this world. My past is one of pain
+      and loss, as the last of the Phoenix race. The hunters sought to profit from
+      our feathers, to stop aging, but my family and friends sacrificed themselves
+      to give me their energy. Now, I reside in this secluded forest, alone with
+      my thoughts and memories. I carry the weight of their names with me always;
+      Shamin, Dainsel, Aena, Soro, Bali, Torin, and Kubuka. I strive to learn and
+      grow, yet I cannot help but fear the day when others may seek my power for
+      their own selfish gain.
+  reset_presetDiologuesDictonary: 0
+  choice1Port: {fileID: 11400000, guid: 2fcd02c729d7cb2419c0250fe81a9128, type: 2}
+  choice1: I still don't understand...
+  choice2Port: {fileID: 0}
+  choice2: 
+  choice3Port: {fileID: 0}
+  choice3: 

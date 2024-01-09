@@ -12,9 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f5a9552c41508849b13695431ac9eb6, type: 3}
   m_Name: Trolls_p3
   m_EditorClassIdentifier: 
-  choice1: 
+  parentPort: {fileID: 0}
+  diologue: Let's wait here awhile
+  presetDiologues: []
+  reset_presetDiologuesDictonary: 0
   choice1Port: {fileID: 0}
-  choice2: 
+  choice1: 
   choice2Port: {fileID: 0}
-  choice3: 
+  choice2: 
   choice3Port: {fileID: 0}
+  choice3: 

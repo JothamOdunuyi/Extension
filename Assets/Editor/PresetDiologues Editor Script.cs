@@ -13,7 +13,6 @@ using UnityEngine.UI;
 public class PresetDiologuesEditorScript : EditorWindow
 {
 
-
     private string apiKey = "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"; //OLD KEY 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
     private string gpt3Endpoint = "https://api.openai.com/v1/chat/completions";
 
@@ -33,20 +32,21 @@ public class PresetDiologuesEditorScript : EditorWindow
     // This value is due to Loading data only ever being 0, 0.5 or 1
     private float fakeProgress = 0f;
 
-    private bool generateForAllConnectedDiologues = false;
 
-    private int attempts = 0; // For safe
-
+    // Generation in All diolgoue Variables
     private List<GPTNPC_ScriptableDiologue> foundDiologuesToGenerateInto;
     private List<GPT_NPC_PresetDiologues> foundPresetDiologuesToGenerateInto;
 
     private bool findingDiologueToGenerateInto = false;
     private bool generateTickCalledRequest = false;
+    private bool generateForAllConnectedDiologues = false;
     private bool generateTickBusy = false;
     private int GTi = -1; // Generate Tick Index
     private float generateTickLoadPreviousTime; //used to create a DeltaTime
     private float generateTickLoadProgress;
 
+
+    // Folder + New Diologue creation variables
     string newDiologueName = "";
     string folderName = "";
 
@@ -58,6 +58,8 @@ public class PresetDiologuesEditorScript : EditorWindow
         window.maxSize = new Vector2(800, 555);
     }
 
+    #region OnGUI Functions
+    
     void SetActiveObj(UnityEngine.Object obj)
     {
         Selection.activeObject = selectedDialogue;
@@ -118,6 +120,7 @@ public class PresetDiologuesEditorScript : EditorWindow
 
             string assetPathAndName;
             string folderPath = string.Empty;
+
             GPTNPC_ScriptableDiologue newDiologue = ScriptableObject.CreateInstance<GPTNPC_ScriptableDiologue>();
 
             if (!string.IsNullOrEmpty(folderName))
@@ -132,7 +135,7 @@ public class PresetDiologuesEditorScript : EditorWindow
             // Create the ScriptableObject asset
             AssetDatabase.CreateAsset(newDiologue, assetPathAndName);
 
-            // Save any changes to the asset database
+            // Save any changes to the asset
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -173,7 +176,6 @@ public class PresetDiologuesEditorScript : EditorWindow
             if (gptNpc == null) { GetLogWindow().LogError("Please select a NPC (GPT_NPC)"); return; }
             if (string.IsNullOrEmpty(selectedDialogue.diologue)) { GetLogWindow().LogError($"Diologue in \"{selectedDialogue.name}\" (GPT_NPC_PresetDiologues) cannot be empty!"); return; }
             
-            attempts = 0;
             if (requestData.messages != null)
             {
                 requestData.messages.Clear();
@@ -210,29 +212,14 @@ public class PresetDiologuesEditorScript : EditorWindow
         }
     }
 
-    private void OnGUI()
+    void SelectedNPCPresetDiologuesInfo()
     {
-        // Drag and drop area for ScriptableObject
-        GUILayout.Label("Drag your GPT_NPC ScriptableObject here:");
-
-        gptNpc = (GPT_NPC)EditorGUILayout.ObjectField(gptNpc, typeof(GPT_NPC), false);
-
-        // Additional information or actions related to the GPT_NPC can be added here
-        ExtraGPTNPCInfoGUI();
-
-        MakeSpace();
-
-        // Display the ObjectField for selecting a ScriptableObject
-        selectedDialogue = (GPTNPC_ScriptableDiologue)EditorGUILayout.ObjectField("Select Preset Diologue", selectedDialogue, typeof(GPTNPC_ScriptableDiologue), false);
-
-        // Check if the selected object is of the correct type
         if (selectedDialogue != null)
         {
-            if(gptNpc != null && selectedDialogue.presetDiologues != null)
+            if (gptNpc != null && selectedDialogue.presetDiologues != null)
             {
                 foreach (GPT_NPC_PresetDiologues preset in selectedDialogue.presetDiologues)
                 {
-                    //if(selectedDialogue == null) { break; } // Due to changing the selectedDiologue mid update this is needed
                     if (preset.NPC == gptNpc)
                     {
                         GUILayout.Label($"{gptNpc.name} has {preset.diologues.Count} preset diologue(s).");
@@ -240,6 +227,26 @@ public class PresetDiologuesEditorScript : EditorWindow
                 }
             }
         }
+    }
+    #endregion
+
+    // Draws the window
+    private void OnGUI()
+    {
+        GUILayout.Label("Drag your GPT_NPC ScriptableObject here:");
+
+        gptNpc = (GPT_NPC)EditorGUILayout.ObjectField(gptNpc, typeof(GPT_NPC), false);
+
+        // Displays addtional info about the NPC
+        ExtraGPTNPCInfoGUI();
+
+        MakeSpace();
+
+        // Display the ObjectField for selecting the Preset Diologue SO
+        selectedDialogue = (GPTNPC_ScriptableDiologue)EditorGUILayout.ObjectField("Select Preset Diologue", selectedDialogue, typeof(GPTNPC_ScriptableDiologue), false);
+
+        // Displays how many preset diologues the selected NPC has already
+        SelectedNPCPresetDiologuesInfo();
 
         MakeSpace();
 
@@ -248,7 +255,6 @@ public class PresetDiologuesEditorScript : EditorWindow
         MakeSpace();
 
         GUILayout.Label("Choose how many prompts you wanted generated here:");
-
 
         promptAmount = EditorGUILayout.IntField($"Enter a number (1-{maxPromptAmount}):", Mathf.Clamp(promptAmount, 1, 5));
 
@@ -262,24 +268,20 @@ public class PresetDiologuesEditorScript : EditorWindow
 
     }
 
-
-    // This will add a assitant message telling GPT to say the prompt for all connected diologues
+    #region All Diolgoue Generation Functions
+    // Loops through all the diologues and adds information needed for the requests to specified lists
     void GenerateForConnectedDiologues(GPTNPC_ScriptableDiologue currentDiologue)
     {
         bool firstThread = false; // Checks if this is the first thread
 
+        // The first thread is the last thread to run (See more under)
         if (!findingDiologueToGenerateInto)
         {
             findingDiologueToGenerateInto = true;
             firstThread = true;
         }
 
-        //AddForMutlipleAssitantMessageToSayPrompt(currentDiologue);
-        //AddAssitantMessageToSayPrompt(currentDiologue);
-
         SetFound(currentDiologue);
-
-       // Debug.Log($"Added Message for \"{currentDiologue.name}\" to count {currentDiologue.presetDiologues.Count - 1}");
 
         foundDiologuesToGenerateInto.Add(currentDiologue);
         foundPresetDiologuesToGenerateInto.Add(found);
@@ -299,6 +301,7 @@ public class PresetDiologuesEditorScript : EditorWindow
             GenerateForConnectedDiologues(currentDiologue.choice3Port);
         }
 
+        // This will allow the final ran thread (the first) to start the API requests ONLY after all diolgoues has been added to lists
         if (firstThread)
         {
             EditorApplication.update += GenerateTick;
@@ -306,6 +309,7 @@ public class PresetDiologuesEditorScript : EditorWindow
 
     }
 
+    // This is the loop for requesting diologues when generate in all dio is toggled
     void GenerateTick()
     {
         if (generateTickBusy) { return; }
@@ -316,7 +320,7 @@ public class PresetDiologuesEditorScript : EditorWindow
             EditorUtility.ClearProgressBar(); // incase GenerateTickLoad has a thread "overlap", this will clear the loading bar
             GTi += 1; // Has to be here bc this will run BEFORE WaitRequest as it was added earlier to the delegate
             
-            // Check if the end has been reached
+            // Check if the end has been reached, and prevent any more quests
             if(GTi > foundDiologuesToGenerateInto.Count - 1) { 
                 EditorApplication.update -= GenerateTick; 
                 GetLogWindow().Log("Generation Complete!");
@@ -329,20 +333,23 @@ public class PresetDiologuesEditorScript : EditorWindow
         }
         else
         {
+            // Handles success and error of the sent request
             if(www.isDone && !generateTickBusy) // prevents unwanted repeat due to later threads
             {
+                // Remove previous prompt diologue and allow the request to be sent again
                 if(www.result == UnityWebRequest.Result.Success)
                 {
                     generateTickBusy = true; // prevents unwanted repeat due to later threads
                     requestData.messages.RemoveAt(requestData.messages.Count - 1); // remove assitant message for that diologue to replace it later
                     generateTickCalledRequest = false;
                     generateTickBusy = false;
+                    canSumbit = true;
                 }
                 else
                 {
                     // Start to wait before next request
                     generateTickBusy = true;
-                    Debug.Log("Will start waiting since error");
+                    Debug.Log("Waiting, since request had an error.");
                     EditorApplication.update -= GenerateTick;
                     generateTickLoadPreviousTime = (float)EditorApplication.timeSinceStartup;
                     EditorApplication.update += GenerateTickLoad;
@@ -352,6 +359,7 @@ public class PresetDiologuesEditorScript : EditorWindow
         }
     }
 
+    // Wait 10 seconds and create a loading bar before requesting again (This happens when a "Generate in all dio" request has a error)
     void GenerateTickLoad()
     {
         // Calculate deltaTime
@@ -365,9 +373,9 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         EditorUtility.DisplayProgressBar("Retrying API Request after some waiting...", "", generateTickLoadProgress * 10); // wait time is 10 seconds so we multiple by 10 here
 
+        // Wait for 10 seconds then attempt to request API agian
         if(generateTickLoadProgress >= 10)
         {
-            Debug.Log("Finished waiting, requesting again");
             EditorApplication.update -= GenerateTickLoad;
             generateTickBusy = false;
             generateTickCalledRequest = false;
@@ -375,20 +383,11 @@ public class PresetDiologuesEditorScript : EditorWindow
         }
     }
 
+    #endregion
 
-    void AddForMutlipleAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
-    {
-        requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following differently: {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
-        Debug.Log($"Please provide variations for the following sentences: {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
-    }
+    #region Prompt Functions
 
-    void AddAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
-    {
-        requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
-        //Debug.Log($"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
-       // Debug.Log($"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
-    }
-
+    // Prompt for the NPC's persanlity, background etc
     void SetNPCData()
     {
         GPT_NPC NPC = gptNpc;
@@ -397,14 +396,12 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         try
         {
-            //promptInstructions = $"Role-play as {NPC.name}{(NPC.hasAge ? $",a {NPC.age}-year-old" : null)}{(!string.IsNullOrEmpty(NPC.gender) ? $" {NPC.gender}" : null)} in a{NPC.world_setting} world{(!string.IsNullOrEmpty(NPC.world_name) ? $" called {NPC.world_name}" : null)}. {NPC.name} is:{(!string.IsNullOrEmpty(NPC.job) ? $" a {NPC.job}" : null)}{(!string.IsNullOrEmpty(NPC.location) ? $" currently in a {NPC.location}," : null)} {NPC.personality}.{(NPC.name_introduction ? $" {NPC.name} introduces their self with their name." : null)} {(!string.IsNullOrEmpty(NPC.backstory) ? $"Your backstory is: {NPC.name}: {NPC.backstory}." : null)} {NPC.name} replies: Human-like, as if {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "a stranger")} greeted you, in {NPC.language} and short. {NPC.name} never does the following: say their personality traits, {(NPC.assume_assitance ? $"assume {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "the stranger")} needs assitance and ask if they need it{(NPC.name_introduction ? "," : null)}" : null)} {(!NPC.name_introduction ? "introduce themself with their name" : null)} say \"{NPC.name}\". Remember to never do these things.{(!string.IsNullOrEmpty(NPC.whoIsTalking) ? $"You are greeted by {NPC.whoIsTalking}" : null)}";
             promptInstructions = $"Role-play as {NPC.name}{(NPC.hasAge ? $", a {NPC.age}-year-old" : null)}{(string.IsNullOrEmpty(NPC.gender) ? null : $" {NPC.gender}")} in a{NPC.world_setting} world{(!string.IsNullOrEmpty(NPC.world_name) ? $" called {NPC.world_name}" : null)}. {NPC.name} is:{(!string.IsNullOrEmpty(NPC.job) ? $" a {NPC.job}" : null)}{(!string.IsNullOrEmpty(NPC.location) ? $" currently in a {NPC.location}," : null)} {NPC.personality}.{(NPC.name_introduction ? $" {NPC.name} introduces themselves without using their name." : null)} {(!string.IsNullOrEmpty(NPC.backstory) ? $"Your backstory is: {NPC.name}: {NPC.backstory}." : null)} {NPC.name} replies: Human-like, as if {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "a stranger")} is talking, in {NPC.language} and short. {NPC.name} never does the following: say their personality traits, {(NPC.assume_assitance ? $"assume {(!string.IsNullOrEmpty(NPC.whoIsTalking) ? NPC.whoIsTalking : "the stranger")} needs assistance and ask if they need it{(NPC.name_introduction ? "," : null)}" : null)} {(!NPC.name_introduction ? "introduce themselves with their name" : null)} say \"{NPC.name}\". Remember to never do these things.{(!string.IsNullOrEmpty(NPC.whoIsTalking) ? $" You are greeted by {NPC.whoIsTalking}" : null)}";
 
         }
         catch
         {
             Debug.LogError("ScriptableObject GPT NPC is incorrect, go to Open API > Create new GPT NPC and follow instructions");
-            //enabled = false;
             return;
         }
 
@@ -415,12 +412,24 @@ public class PresetDiologuesEditorScript : EditorWindow
             requestData.messages.Add(new Messages { role = "user", content = $"I am {NPC.whoIsTalking}" });
         }
 
-
-        //Debug.Log($"Say the following as {NPC.name} :\"{selectedDialogue.diologue}\"");
-
-
     }
 
+    // Leaving this for the future (I was attempting to hvae it say everything in every diologue but for one prompt)
+    void AddForMutlipleAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
+    {
+        requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following differently: {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
+        Debug.Log($"Please provide variations for the following sentences: {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"");
+    }
+
+    // Adds what the NPC should say
+    void AddAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
+    {
+        requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
+    }
+
+    #endregion
+
+    #region API Request Handles
     // Send API request
     private void Request()
     {
@@ -464,7 +473,7 @@ public class PresetDiologuesEditorScript : EditorWindow
         if (!canSumbit)
         {
 
-            // Show Loading Bar
+            // Show Loading Bar while request is waiting
             if (!www.isDone)
             {
                 // This value is due to Loading data only ever being 0, 0.5 or 1
@@ -495,16 +504,7 @@ public class PresetDiologuesEditorScript : EditorWindow
                 Choices systemMessage = responseData.choices[0];
                 string assistantReply = RemoveSpeechMarks(systemMessage.message.content);
 
-                // Adds AI's reponse to message history
-                //requestData.messages.Add(new Messages { role = "system", content = assistantReply });
-
                 EditorUtility.DisplayProgressBar("Adding Diologue...", "Adding Diologue", 50);
-
-                //foreach (var item in requestData.messages)
-                //{
-                //    Debug.Log($"Role: {item.role} Content: {item.content}");
-                //}
-               // Add Loading here too
 
                 if (generateForAllConnectedDiologues)
                 {
@@ -512,40 +512,37 @@ public class PresetDiologuesEditorScript : EditorWindow
                     int timesAdded = 0;
                     string[] lines = assistantReply.Split('\n');
 
-                    foreach (string line in lines){
+                    foreach (string line in lines)
+                    {
                         timesAdded += 1;
                         //Debug.Log($"GTi: {GTi} is {foundDiologuesToGenerateInto[GTi].name} ");
                         foundPresetDiologuesToGenerateInto[GTi].diologues.Add(line);
                     }
 
                     // Log a warning if there weren't as much lines as the user expected
-                    if(timesAdded < promptAmount)
-                    {
-                        GetLogWindow().LogWarning($"For DiologuePreset \"{foundDiologuesToGenerateInto[GTi].name}\" the token count was too high to generate {promptAmount} diologues!\n Considering shortening the diologue or waiting a couple minutes for more tokens.");
-                    }
+                    CheckForTokenLogWarning(timesAdded);
 
                 }
                 else
                 {
+                    int timesAdded = 0;
                     string[] lines = assistantReply.Split('\n');
 
                     foreach (string line in lines)
                     {
+                        timesAdded += 1;
                         found.diologues.Add(line);
                     }
 
+                    // Log a warning if there weren't as much lines as the user expected
+                    CheckForTokenLogWarning(timesAdded);
+
                 }
 
-                // Displays the updated conversation without having to wait for OnGUI
-                //Repaint();
-
-                canSumbit = true;
 
             }
             else
             {
-
-                // Remove from delegate
 
                 Debug.LogWarning(www.error);
                 Debug.Log(requestData.messages.Count);
@@ -560,12 +557,18 @@ public class PresetDiologuesEditorScript : EditorWindow
 
         }
 
+        // remove from delegate
         EditorApplication.update -= WaitForRequest;
+
         // Close loading bar
         EditorUtility.ClearProgressBar();
 
+        if (!generateForAllConnectedDiologues) { canSumbit = true; }
     }
 
+    #endregion
+
+    #region Request Helper Functions
 
     private string RemoveSpeechMarks(string input)
     {
@@ -575,6 +578,18 @@ public class PresetDiologuesEditorScript : EditorWindow
         }
         return input;
     }
+
+    // A warning for when there could be a Token issue
+    void CheckForTokenLogWarning(int timesAdded)
+    {
+        // Log a warning if there weren't as much lines as the user expected
+        if (timesAdded < promptAmount)
+        {
+            GetLogWindow().LogWarning($"For DiologuePreset \"{foundDiologuesToGenerateInto[GTi].name}\" the token count was too high to generate {promptAmount} diologues!\n Considering shortening the diologue or waiting a couple minutes for more tokens.");
+        }
+    }
+
+    #endregion
 
     #region Data Classes
 
