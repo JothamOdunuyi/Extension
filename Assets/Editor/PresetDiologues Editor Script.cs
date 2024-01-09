@@ -32,6 +32,7 @@ public class PresetDiologuesEditorScript : EditorWindow
     // This value is due to Loading data only ever being 0, 0.5 or 1
     private float fakeProgress = 0f;
 
+    int attempts = 0;
 
     // Generation in All diolgoue Variables
     private List<GPTNPC_ScriptableDiologue> foundDiologuesToGenerateInto;
@@ -193,20 +194,32 @@ public class PresetDiologuesEditorScript : EditorWindow
 
             SetNPCData();
 
-            if (generateForAllConnectedDiologues)
+            if (canSumbit)
             {
-                foundDiologuesToGenerateInto = new List<GPTNPC_ScriptableDiologue>();
-                foundPresetDiologuesToGenerateInto = new List<GPT_NPC_PresetDiologues>();
-                findingDiologueToGenerateInto = false;
-                GTi = -1;
+                canSumbit = false;
+                attempts = 0;
+                if (generateForAllConnectedDiologues)
+                {
+                    foundDiologuesToGenerateInto = new List<GPTNPC_ScriptableDiologue>();
+                    foundPresetDiologuesToGenerateInto = new List<GPT_NPC_PresetDiologues>();
+                    findingDiologueToGenerateInto = false;
+                    GTi = -1;
 
-                GenerateForConnectedDiologues(selectedDialogue);
+                    GenerateForConnectedDiologues(selectedDialogue);
+                }
+                else
+                {
+                    AddAssitantMessageToSayPrompt(selectedDialogue);
+                    Request();
+                }
             }
             else
             {
-                AddAssitantMessageToSayPrompt(selectedDialogue);
-                Request();
+                // Make sure User cannot spam request
+                GetLogWindow().LogWarning("You are already in the middle of requesting");
+                return;
             }
+         
 
 
         }
@@ -318,10 +331,14 @@ public class PresetDiologuesEditorScript : EditorWindow
         {
             generateTickCalledRequest = true;
             EditorUtility.ClearProgressBar(); // incase GenerateTickLoad has a thread "overlap", this will clear the loading bar
-            GTi += 1; // Has to be here bc this will run BEFORE WaitRequest as it was added earlier to the delegate
-            
+
+            // Only precede to generate next prompt if the previous was a success
+            if ( www == null || www.result == UnityWebRequest.Result.Success){
+                GTi += 1; // Has to be here bc this will run BEFORE WaitRequest as it was added earlier to the delegate
+            }
+              
             // Check if the end has been reached, and prevent any more quests
-            if(GTi > foundDiologuesToGenerateInto.Count - 1) { 
+            if (GTi > foundDiologuesToGenerateInto.Count - 1) { 
                 EditorApplication.update -= GenerateTick; 
                 GetLogWindow().Log("Generation Complete!");
                 generateTickCalledRequest = false;
@@ -344,7 +361,6 @@ public class PresetDiologuesEditorScript : EditorWindow
                     requestData.messages.RemoveAt(requestData.messages.Count - 1); // remove assitant message for that diologue to replace it later
                     generateTickCalledRequest = false;
                     generateTickBusy = false;
-                    canSumbit = true;
                 }
                 else
                 {
@@ -426,6 +442,7 @@ public class PresetDiologuesEditorScript : EditorWindow
     void AddAssitantMessageToSayPrompt(GPTNPC_ScriptableDiologue sentDiologue)
     {
         requestData.messages.Add(new Messages { role = "assistant", content = $"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{sentDiologue.diologue}\"" });
+        Debug.Log($"Say the following but differently {Mathf.Clamp(promptAmount, 1, maxPromptAmount)} times:\"{ sentDiologue.diologue}\"");
     }
 
     #endregion
@@ -434,15 +451,7 @@ public class PresetDiologuesEditorScript : EditorWindow
     // Send API request
     private void Request()
     {
-        // Make sure User cannot spam request
-        if (!canSumbit)
-        {
-            GetLogWindow().LogWarning("You are already in the middle of requesting");
-            return;
-        }
-
-        canSumbit = false;
-
+      
         // Convert request data to JSON
         string json = JsonUtility.ToJson(requestData);
 
@@ -472,99 +481,107 @@ public class PresetDiologuesEditorScript : EditorWindow
     // Wait, then output request
     private void WaitForRequest()
     {
-        if (!canSumbit)
+        // Show Loading Bar while request is waiting
+        if (!www.isDone)
         {
+            // This value is due to? Loading data only ever being 0, 0.5 or 1
+            fakeProgress += 0.005f;
+            progress = Mathf.Clamp01((www.downloadProgress + www.uploadProgress) / 2 + fakeProgress);
 
-            // Show Loading Bar while request is waiting
-            if (!www.isDone)
+            if (www.uploadProgress == 0)
             {
-                Debug.Log("Not done");
-                // This value is due to? Loading data only ever being 0, 0.5 or 1
-                fakeProgress += 0.005f;
-                progress = Mathf.Clamp01((www.downloadProgress + www.uploadProgress) / 2 + fakeProgress);
-
-                if (www.uploadProgress == 0)
-                {
-                    EditorUtility.DisplayProgressBar("Requesting API...", $"Progress: {progress * 100}%", Mathf.Clamp(progress, 0, 90));
-                }
-                else if (www.downloadProgress == 0)
-                {
-                    EditorUtility.DisplayProgressBar("Waiting for API...", $"Progress: {progress * 100}%", Mathf.Clamp(progress, 0, 90));
-                }
-
-                return;
+                EditorUtility.DisplayProgressBar("Requesting API...", $"Progress: {progress * 100}%", Mathf.Clamp(progress, 0, 90));
+            }
+            else if (www.downloadProgress == 0)
+            {
+                EditorUtility.DisplayProgressBar("Waiting for API...", $"Progress: {progress * 100}%", Mathf.Clamp(progress, 0, 90));
             }
 
-            EditorUtility.DisplayProgressBar("Completed API Request", "Progress: 100% ", 100);
-            Debug.Log($"RESULT: {www.result}");
-            if (www.result == UnityWebRequest.Result.Success)
+            return;
+        }
+
+        EditorUtility.DisplayProgressBar("Completed API Request", "Progress: 100% ", 100);
+        
+        Debug.Log("Outisde of done");
+        if (www.result == UnityWebRequest.Result.Success)
+        {
+
+            EditorUtility.DisplayProgressBar("Adding Diologue...", "Converting Data", 0);
+            // Convert data
+            ResponseData responseData = JsonUtility.FromJson<ResponseData>(www.downloadHandler.text);
+
+            Choices systemMessage = responseData.choices[0];
+            string assistantReply = RemoveSpeechMarks(systemMessage.message.content);
+
+            EditorUtility.DisplayProgressBar("Adding Diologue...", "Adding Diologue", 50);
+
+            Debug.Log(assistantReply);
+            Debug.Log("GEENRATION: " + generateForAllConnectedDiologues);
+
+            if (generateForAllConnectedDiologues)
             {
 
-                EditorUtility.DisplayProgressBar("Adding Diologue...", "Converting Data", 0);
-                // Convert data
-                ResponseData responseData = JsonUtility.FromJson<ResponseData>(www.downloadHandler.text);
+                int timesAdded = 0;
+                string[] lines = assistantReply.Split('\n');
 
-                Choices systemMessage = responseData.choices[0];
-                string assistantReply = RemoveSpeechMarks(systemMessage.message.content);
-
-                EditorUtility.DisplayProgressBar("Adding Diologue...", "Adding Diologue", 50);
-
-                Debug.Log(assistantReply);
-                Debug.Log("GEENRATION: " + generateForAllConnectedDiologues);
-
-                if (generateForAllConnectedDiologues)
+                foreach (string line in lines)
                 {
-
-                    int timesAdded = 0;
-                    string[] lines = assistantReply.Split('\n');
-
-                    foreach (string line in lines)
-                    {
-                        timesAdded += 1;
-                        //Debug.Log($"GTi: {GTi} is {foundDiologuesToGenerateInto[GTi].name} ");
-                        Debug.Log($"GTi: {GTi}, adding line: {line} \nTO DIOLOGUE: {foundDiologuesToGenerateInto[GTi].diologue}");
-                        foundPresetDiologuesToGenerateInto[GTi].diologues.Add(line);
-                    }
-
-                    // Log a warning if there weren't as much lines as the user expected
-                    CheckForTokenLogWarning(timesAdded);
-
-                }
-                else
-                {
-                    int timesAdded = 0;
-                    string[] lines = assistantReply.Split('\n');
-
-                    foreach (string line in lines)
-                    {
-                        timesAdded += 1;
-                        found.diologues.Add(line);
-                    }
-
-                    // Log a warning if there weren't as much lines as the user expected
-                    CheckForTokenLogWarning(timesAdded);
-
+                    timesAdded += 1;
+                    //Debug.Log($"GTi: {GTi} is {foundDiologuesToGenerateInto[GTi].name} ");
+                    Debug.Log($"GTi: {GTi}, adding line: {line} \nTO DIOLOGUE: {foundDiologuesToGenerateInto[GTi].diologue}");
+                    foundPresetDiologuesToGenerateInto[GTi].diologues.Add(line);
                 }
 
+                // Log a warning if there weren't as much lines as the user expected
+                CheckForTokenLogWarning(timesAdded);
 
             }
             else
             {
+                int timesAdded = 0;
+                string[] lines = assistantReply.Split('\n');
 
-                Debug.LogWarning(www.error);
-                Debug.Log(requestData.messages.Count);
-                //foreach (var item in requestData.messages)
-                //{
-                //    Debug.Log($"Role: {item.role} Content: {item.content}");
-                //}
-                GetLogWindow().LogError(www.error);
+                foreach (string line in lines)
+                {
+                    timesAdded += 1;
+                    found.diologues.Add(line);
+                }
+
+                // Log a warning if there weren't as much lines as the user expected
+                CheckForTokenLogWarning(timesAdded);
+
             }
 
-            EditorUtility.DisplayProgressBar("Complete", "", 100);
+        }
+        else
+        {
+            attempts += 1;
+            Debug.LogWarning(www.error);
+            Debug.Log(requestData.messages.Count);
+            foreach (var item in requestData.messages)
+            {
+                Debug.Log($"Role: {item.role} Content: {item.content}");
+            }
+            GetLogWindow().LogError(www.error);
+
+            // For safety, it will shutdown everything
+            if(attempts > 2)
+            {
+                EditorApplication.update -= WaitForRequest;
+                EditorApplication.update -= GenerateTick;
+                EditorApplication.update -= GenerateTickLoad;
+                EditorUtility.ClearProgressBar();
+                canSumbit = true;
+                GetLogWindow().LogError($"Had to shutdown operation, too many attempts. Total was :{attempts}");
+                //Close();
+                return;
+            }
 
         }
 
-        // remove from delegate
+        EditorUtility.DisplayProgressBar("Complete", "", 100);
+
+        // Remove from delegate
         EditorApplication.update -= WaitForRequest;
 
         // Close loading bar

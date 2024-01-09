@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: MS p2
   m_EditorClassIdentifier: 
   parentPort: {fileID: 11400000, guid: 1238560d67bb7b94fab2512c1874570f, type: 2}
-  diologue: '[Explain how you can''t believe you''ve been found]'
-  presetDiologues: []
+  diologue: I can't believe someone found me
+  presetDiologues:
+  - NPC: {fileID: 11400000, guid: 5f19a0135c6422d4ba4682218232ae3a, type: 2}
+    diologues: []
   reset_presetDiologuesDictonary: 0
   choice1Port: {fileID: 0}
   choice1: 
